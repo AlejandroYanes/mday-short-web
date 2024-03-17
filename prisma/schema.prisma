@@ -7,16 +7,39 @@ generator client {
 }
 
 datasource db {
-    provider = "mysql"
-    url      = env("DATABASE_URL")
+    provider = "postgresql"
+    url = env("POSTGRES_PRISMA_URL") // uses connection pooling
+    directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
     relationMode = "prisma"
 }
 
-model Post {
-    id        Int      @id @default(autoincrement())
-    name      String
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+model MLS_Link {
+    id              String          @id
+    url             String
+    slug            String
+    password        String?
+    expiresAt       DateTime?
+    createdAt       DateTime        @default(now())
+    postedBy        MLS_User?       @relation(fields: [postedById], references: [id])
+    postedById      String?
+}
 
-    @@index([name])
+model MLS_Analytic {
+    id              String      @id
+    experiment      String
+    variant         String      @default("default")
+    event           String
+    visitorId       String?
+    country         String?
+    city            String?
+    region          String?
+    device          String?
+    createdAt       DateTime    @default(now())
+}
+
+model MLS_User {
+    id      String      @id
+    name    String
+    slug    String      @unique
+    links   MLS_Link[]
 }
