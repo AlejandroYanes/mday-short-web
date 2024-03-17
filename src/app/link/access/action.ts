@@ -1,6 +1,7 @@
 'use server'
 
 import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
 import { sql } from '@vercel/postgres';
 
 import type { ShortLink } from 'models/links';
@@ -15,5 +16,6 @@ export async function validatePassword(data: FormData) {
     redirect(`/link/access?slug=${slug}&access=denied`);
   }
 
+  cookies().set(`mls_${slug}_access`, 'granted');
   redirect(`/visit/${slug}?access=granted`);
 }

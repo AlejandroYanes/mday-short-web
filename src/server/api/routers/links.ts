@@ -16,7 +16,7 @@ export const linkRouter = createTRPCRouter({
     .query(async ({ input }) => {
       const { page, pageSize } = input;
       const links = await sql<ShortLink>`
-          SELECT id, url, slug, password, "expiresAt", "createdAt"
+          SELECT id, url, slug, password, "expiresAt"
           FROM "MLS_Link"
           ORDER BY "createdAt" DESC
           OFFSET ${(page - 1) * pageSize}
@@ -55,7 +55,7 @@ export const linkRouter = createTRPCRouter({
     .mutation(async ({ input }) => {
       const { id, url, slug, password, expiresAt } = input;
 
-      const prevLink = await sql<ShortLink>`SELECT id FROM "MLS_Link" WHERE id = ${id}`;
+      const prevLink = await sql<ShortLink>`SELECT id FROM "MLS_Link" WHERE id = ${id};`;
 
       if (!prevLink.rowCount) {
         throw new TRPCError({

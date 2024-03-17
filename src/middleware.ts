@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { cookies } from 'next/headers';
 import { sql } from '@vercel/postgres';
 
 import type { ShortLink } from 'models/links';
@@ -42,7 +43,7 @@ export async function middleware(req: NextRequest) {
   }
 
   if (link.password) {
-    const access = req.nextUrl.searchParams.get('access');
+    const access = cookies().get(`mls_${slug}_access`)?.value;
 
     if (access !== 'granted') {
       url.pathname = '/link/access';
