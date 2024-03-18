@@ -39,7 +39,7 @@ export default function LinkFormModal(props: Props) {
   const handleClick = async () => {
     const form = new FormData(formRef.current!);
     const data = {
-      url: form.get('link') as string,
+      url: form.get('url') as string,
       slug: form.get('shortName') as string,
       password: form.get('password') as string,
       expiresAt: date?.toUTCString() ?? null,
@@ -69,7 +69,7 @@ export default function LinkFormModal(props: Props) {
         </DialogHeader>
         <form ref={formRef}>
           <div className="flex flex-col gap-6 pt-6 pb-10">
-            <InputWithLabel label="Link" name="link" required defaultValue={initialValue?.url} />
+            <InputWithLabel label="URL" name="url" required defaultValue={initialValue?.url} />
             <InputWithLabel
               required
               name="shortName"

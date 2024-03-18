@@ -39,7 +39,7 @@ export default function LinksTable() {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Link</TableHead>
+            <TableHead>URL</TableHead>
             <TableHead className="text-center" style={{ width: '170px' }}>Short name</TableHead>
             <TableHead className="text-center" style={{ width: '150px' }}>Password</TableHead>
             <TableHead className="text-center" style={{ width: '150px' }}>Expires On</TableHead>

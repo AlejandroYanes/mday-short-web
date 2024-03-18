@@ -18,7 +18,7 @@ export const linkRouter = createTRPCRouter({
       const links = await sql<ShortLink>`
           SELECT id, url, slug, password, "expiresAt"
           FROM "MLS_Link"
-          ORDER BY "createdAt" DESC
+          ORDER BY "createdAt"
           OFFSET ${(page - 1) * pageSize}
           LIMIT ${pageSize};
       `;
