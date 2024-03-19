@@ -2,6 +2,7 @@ export * from './render-if';
 export * from './accordion';
 export * from './alert';
 export * from './alert-dialog';
+export * from './app-banner';
 export * from './avatar';
 export * from './badge';
 export * from './button';

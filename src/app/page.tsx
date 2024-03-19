@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import { Button } from 'ui';
+import { AppBanner, Button } from 'ui';
 
 function NumberedStep({ number, title, description }: { number: number; title: string; description: string }) {
   return (
@@ -16,11 +16,7 @@ export default async function Home() {
   return (
     <section className="flex min-h-screen flex-col">
       <main className="container flex flex-col items-center justify-center gap-12 px-4 py-16 h-screen">
-        <h1 className="text-5xl font-extrabold tracking-tight sm:text-[5rem]">
-          <span className="text-red-500 mr-4">Monday.com </span>
-          <span className="text-amber-500 mr-4">Link </span>
-          <span className="text-emerald-500">Shortener</span>
-        </h1>
+        <AppBanner />
         <section data-el="how-it-works" className="flex flex-col max-w-[700px] mx-auto pr-4">
           <NumberedStep
             number={1}
