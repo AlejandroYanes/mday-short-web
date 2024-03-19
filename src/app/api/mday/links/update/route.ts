@@ -33,6 +33,10 @@ export async function PUT(req: NextRequest) {
     RETURNING *;
   `;
 
+  if (query.rowCount === 0) {
+    return new Response(JSON.stringify({ success: false, error: 'Not Found' }), { status: 404, headers });
+  }
+
   return new Response(JSON.stringify(query.rows[0]), { status: 200, headers });
 }
 
