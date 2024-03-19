@@ -74,18 +74,11 @@ export const linkRouter = createTRPCRouter({
       const { id, url, slug, password, expiresAt } = input;
 
       const client = await sql.connect();
-      const prevLink = await client.sql<ShortLink>`SELECT id FROM "MLS_Link" WHERE id = ${id};`;
 
-      if (!prevLink.rowCount) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Link not found',
-        });
-      }
+      const linkBySlug = await client.sql<ShortLink>`SELECT id, slug FROM "MLS_Link" WHERE slug = ${slug};`;
 
-      const query = await client.sql<ShortLink>`SELECT id, slug FROM "MLS_Link" WHERE slug = ${slug};`;
-
-      if (query.rowCount > 0 && query.rows[0]!.id !== id) {
+      if (linkBySlug.rowCount > 0 && linkBySlug.rows[0]!.id !== id) {
+        client.release();
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message: 'The short name already exists somewhere else.',
@@ -98,6 +91,14 @@ export const linkRouter = createTRPCRouter({
         RETURNING *;
       `;
 
+      if (!link.rowCount) {
+        client.release();
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Link not found',
+        });
+      }
+
       client.release();
 
       return link.rows[0];
@@ -108,19 +109,14 @@ export const linkRouter = createTRPCRouter({
     .mutation(async ({ input }) => {
       const { id } = input;
 
-      const client = await sql.connect();
-      const prevLink = await client.sql<ShortLink>`SELECT id FROM "MLS_Link" WHERE id = ${id};`;
+      const query = await sql`DELETE FROM "MLS_Link" WHERE id = ${id} RETURNING *;`;
 
-      if (!prevLink.rowCount) {
+      if (!query.rowCount) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'Link not found',
         });
       }
-
-      await client.sql`DELETE FROM "MLS_Link" WHERE id = ${id};`;
-
-      client.release();
 
       return true;
     }),

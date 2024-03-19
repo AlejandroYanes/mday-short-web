@@ -15,7 +15,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: { id: stri
     return new Response(JSON.stringify({ error: 'Invalid ID' }), { status: 400, headers });
   }
 
-  const query = await sql`DELETE FROM "MLS_Link" WHERE id = ${params.id};`;
+  const query = await sql`DELETE FROM "MLS_Link" WHERE id = ${params.id} RETURNING *;`;
 
   if (query.rowCount === 0) {
     return new Response(JSON.stringify({ success: false, error: 'Not Found' }), { status: 404, headers });

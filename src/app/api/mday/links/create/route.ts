@@ -27,11 +27,23 @@ export async function POST(req: NextRequest) {
   }
 
   const { url, slug, password, expiresAt } = parse.data;
-  const query = await sql<NewShortLink>`
+
+  const client = await sql.connect();
+
+  const linkBySlug = await client.sql<NewShortLink>`SELECT slug FROM "MLS_Link" WHERE slug = ${slug};`;
+
+  if (linkBySlug.rowCount > 0) {
+    client.release();
+    return new Response(JSON.stringify({ success: false, error: 'Slug already exists somewhere else.' }), { status: 400, headers });
+  }
+
+  const query = await client.sql<NewShortLink>`
     INSERT INTO "MLS_Link" (id, url, slug, password, "expiresAt", "createdAt")
     VALUES (${createId()}, ${url}, ${slug}, ${password}, ${expiresAt}, NOW())
     RETURNING *;
   `;
+
+  client.release();
 
   return new Response(JSON.stringify(query.rows[0]), { status: 201, headers });
 }
