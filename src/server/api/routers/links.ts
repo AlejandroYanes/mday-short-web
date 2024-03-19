@@ -102,4 +102,26 @@ export const linkRouter = createTRPCRouter({
 
       return link.rows[0];
     }),
+
+  delete: protectedProcedure
+    .input(z.object({ id: z.string().cuid2() }))
+    .mutation(async ({ input }) => {
+      const { id } = input;
+
+      const client = await sql.connect();
+      const prevLink = await client.sql<ShortLink>`SELECT id FROM "MLS_Link" WHERE id = ${id};`;
+
+      if (!prevLink.rowCount) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Link not found',
+        });
+      }
+
+      await client.sql`DELETE FROM "MLS_Link" WHERE id = ${id};`;
+
+      client.release();
+
+      return true;
+    }),
 });

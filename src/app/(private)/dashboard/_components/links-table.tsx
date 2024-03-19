@@ -9,6 +9,7 @@ import { useDebounce } from 'utils/hooks/use-debounce';
 import { Input, Pagination, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from 'ui';
 import NewLink from './new-link';
 import EditLink from './edit-link';
+import DeleteLink from './delete-link';
 
 export default function LinksTable() {
   const [page, setPage] = useState(1);
@@ -65,8 +66,11 @@ export default function LinksTable() {
 
               <TableCell className="text-center">{link.expiresAt ? formatDate(link.expiresAt) : '-'}</TableCell>
 
-              <TableCell className="text-center">
-                <EditLink link={link} onSuccess={refetch} />
+              <TableCell>
+                <div className="flex items-center justify-center gap-2">
+                  <EditLink link={link} onSuccess={refetch} />
+                  <DeleteLink link={link} onSuccess={refetch} />
+                </div>
               </TableCell>
             </TableRow>
           ))}
