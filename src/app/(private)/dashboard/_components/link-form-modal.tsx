@@ -22,6 +22,7 @@ import type { NewShortLink, ShortLink } from 'models/links';
 interface  Props {
   title: string;
   description?: string;
+  error?: string | null;
   initialValue?: ShortLink;
   loading: boolean;
   trigger: ReactNode;
@@ -29,7 +30,7 @@ interface  Props {
 }
 
 export default function LinkFormModal(props: Props) {
-  const { title, description, initialValue, trigger, loading, onSubmit } = props;
+  const { title, description, error, initialValue, trigger, loading, onSubmit } = props;
 
   const [showModal, setShowModal] = useState(false);
   const [date, setDate] = useState<Date | undefined>(initialValue?.expiresAt ? new Date(initialValue.expiresAt) : undefined);
@@ -68,6 +69,9 @@ export default function LinkFormModal(props: Props) {
           </RenderIf>
         </DialogHeader>
         <form ref={formRef}>
+          <RenderIf condition={!!error}>
+            <div className="text-red-500 dark:text-red-400 text-base mb-4">{error}</div>
+          </RenderIf>
           <div className="flex flex-col gap-6 pt-6 pb-10">
             <InputWithLabel label="URL" name="url" required defaultValue={initialValue?.url} />
             <InputWithLabel

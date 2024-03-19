@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react';
+import type { TRPCError } from '@trpc/server';
 
 import { Button } from 'ui';
 import { api } from 'trpc/react';
@@ -13,19 +14,19 @@ interface  Props {
 
 export default function NewLink(props: Props) {
   const { onSuccess } = props;
-  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const { mutateAsync: createLink } = api.link.create.useMutation();
+  const { mutateAsync: createLink, isLoading } = api.link.create.useMutation();
 
   const handleClick = async (data: NewShortLink) => {
     try {
-      setLoading(true);
       await createLink(data);
-      setLoading(false);
       onSuccess();
-    } catch (e) {
-      setLoading(false);
-      console.error(e);
+    } catch (e: any) {
+      if (e.shape.data.code === 'BAD_REQUEST') {
+        setError(e.shape.message);
+      }
+      throw e;
     }
   };
 
@@ -33,7 +34,8 @@ export default function NewLink(props: Props) {
     <LinkFormModal
       title="Add new link"
       description="Create a new link to share, customize the new link with a shorter name. You can set a password, and expiration date."
-      loading={loading}
+      loading={isLoading}
+      error={error}
       onSubmit={handleClick}
       trigger={<Button variant="black">Add new link</Button>}
     />

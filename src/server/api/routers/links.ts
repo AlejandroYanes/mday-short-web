@@ -15,39 +15,57 @@ export const linkRouter = createTRPCRouter({
     }))
     .query(async ({ input }) => {
       const { page, pageSize } = input;
-      const links = await sql<ShortLink>`
+
+      const client = await sql.connect();
+      const links = await client.sql<ShortLink>`
           SELECT id, url, slug, password, "expiresAt"
           FROM "MLS_Link"
           ORDER BY "createdAt"
           OFFSET ${(page - 1) * pageSize}
           LIMIT ${pageSize};
       `;
+      const countQuery = await client.sql<{ id: string }>`SELECT id FROM "MLS_Link";`;
 
-      return { results: links.rows, count: links.rowCount };
+      client.release();
+
+      return { results: links.rows, count: countQuery.rowCount };
     }),
 
   create: protectedProcedure
     .input(z.object({
-      url: z.string(),
+      url: z.string().url(),
       slug: z.string(),
       password: z.string().nullish(),
       expiresAt: z.string().nullish(),
     }))
     .mutation(async ({ input }) => {
       const { url, slug, password, expiresAt } = input;
-      const link = await sql<ShortLink>`
+
+      const client = await sql.connect();
+      const query = await client.sql<ShortLink>`SELECT slug FROM "MLS_Link" WHERE slug = ${slug};`;
+
+      if (query.rowCount) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'The short name already exists somewhere else.',
+        });
+      }
+
+      const link = await client.sql<ShortLink>`
         INSERT INTO "MLS_Link" (id, url, slug, password, "expiresAt", "createdAt")
         VALUES (${createId()}, ${url}, ${slug}, ${password}, ${expiresAt}, NOW())
         RETURNING *;
       `;
+
+      client.release();
 
       return link.rows[0];
     }),
 
   update: protectedProcedure
     .input(z.object({
-      id: z.string(),
-      url: z.string(),
+      id: z.string().cuid2(),
+      url: z.string().url(),
       slug: z.string(),
       password: z.string().nullish(),
       expiresAt: z.string().nullish(),
@@ -55,7 +73,8 @@ export const linkRouter = createTRPCRouter({
     .mutation(async ({ input }) => {
       const { id, url, slug, password, expiresAt } = input;
 
-      const prevLink = await sql<ShortLink>`SELECT id FROM "MLS_Link" WHERE id = ${id};`;
+      const client = await sql.connect();
+      const prevLink = await client.sql<ShortLink>`SELECT id FROM "MLS_Link" WHERE id = ${id};`;
 
       if (!prevLink.rowCount) {
         throw new TRPCError({
@@ -64,11 +83,22 @@ export const linkRouter = createTRPCRouter({
         });
       }
 
-      const link = await sql<ShortLink>`
+      const query = await client.sql<ShortLink>`SELECT id, slug FROM "MLS_Link" WHERE slug = ${slug};`;
+
+      if (query.rowCount > 0 && query.rows[0]!.id !== id) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'The short name already exists somewhere else.',
+        });
+      }
+
+      const link = await client.sql<ShortLink>`
         UPDATE "MLS_Link" SET url = ${url}, slug = ${slug}, password = ${password}, "expiresAt" = ${expiresAt}
         WHERE id = ${id}
         RETURNING *;
       `;
+
+      client.release();
 
       return link.rows[0];
     }),

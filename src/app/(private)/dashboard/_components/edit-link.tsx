@@ -15,19 +15,19 @@ interface  Props {
 
 export default function EditLink(props: Props) {
   const { link, onSuccess } = props;
-  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const { mutateAsync: updateLink } = api.link.update.useMutation();
+  const { mutateAsync: updateLink, isLoading } = api.link.update.useMutation();
 
   const handleClick = async (data: NewShortLink) => {
     try {
-      setLoading(true);
       await updateLink({ ...data, id: link.id });
-      setLoading(false);
       onSuccess();
-    } catch (e) {
-      setLoading(false);
-      console.error(e);
+    } catch (e: any) {
+      if (e.shape.data.code === 'BAD_REQUEST') {
+        setError(e.shape.message);
+      }
+      throw e;
     }
   };
 
@@ -35,7 +35,8 @@ export default function EditLink(props: Props) {
     <LinkFormModal
       title="Update a link"
       initialValue={link}
-      loading={loading}
+      loading={isLoading}
+      error={error}
       onSubmit={handleClick}
       trigger={
         <Button variant="ghost" size="sm">

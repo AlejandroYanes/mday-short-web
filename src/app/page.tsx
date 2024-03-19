@@ -35,10 +35,7 @@ export default async function Home() {
           <NumberedStep
             number={3}
             title="Lots of customization"
-            description="
-          Customize your links with your own domain. Add UTM parameters to track your campaigns.
-          Add time limits to your links and much more.
-          "
+            description="Customize your links with your own domain. Add time limits and passwords to your links."
           />
         </section>
 
