@@ -5,7 +5,7 @@ import { z } from 'zod';
 import type { NewShortLink, ShortLink } from 'models/links';
 
 const validator = z.object({
-  id: z.string().cuid2(),
+  id: z.number(),
   url: z.string(),
   slug: z.string(),
   password: z.string().nullish(),
@@ -30,7 +30,7 @@ export async function PUT(req: NextRequest) {
 
   const client = await sql.connect();
 
-  const linkBySlug = await client.sql<ShortLink>`SELECT slug FROM "MLS_Link" WHERE slug = ${slug};`;
+  const linkBySlug = await client.sql<ShortLink>`SELECT slug FROM "Link" WHERE slug = ${slug};`;
 
   if (linkBySlug.rowCount > 0 && linkBySlug.rows[0]!.id !== parse.data.id) {
     client.release();
@@ -41,7 +41,7 @@ export async function PUT(req: NextRequest) {
   }
 
   const query = await client.sql<NewShortLink>`
-    UPDATE "MLS_Link" SET url = ${url}, slug = ${slug}, password = ${password}, "expiresAt" = ${expiresAt}
+    UPDATE "Link" SET url = ${url}, slug = ${slug}, password = ${password}, "expiresAt" = ${expiresAt}
     WHERE id = ${parse.data.id}
     RETURNING *;
   `;

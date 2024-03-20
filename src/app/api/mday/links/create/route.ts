@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
 
   const client = await sql.connect();
 
-  const linkBySlug = await client.sql<NewShortLink>`SELECT slug FROM "MLS_Link" WHERE slug = ${slug};`;
+  const linkBySlug = await client.sql<NewShortLink>`SELECT slug FROM "Link" WHERE slug = ${slug};`;
 
   if (linkBySlug.rowCount > 0) {
     client.release();
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
   }
 
   const query = await client.sql<NewShortLink>`
-    INSERT INTO "MLS_Link" (id, url, slug, password, "expiresAt", "createdAt")
+    INSERT INTO "Link" (id, url, slug, password, "expiresAt", "createdAt")
     VALUES (${createId()}, ${url}, ${slug}, ${password}, ${expiresAt}, NOW())
     RETURNING *;
   `;

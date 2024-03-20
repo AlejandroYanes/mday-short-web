@@ -1,5 +1,5 @@
 export interface ShortLink {
-  id: string;
+  id: number;
   url: string;
   slug: string;
   password: string | null;

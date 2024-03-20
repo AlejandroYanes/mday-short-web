@@ -2,7 +2,7 @@ import type { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { sql } from '@vercel/postgres';
 
-const validator = z.string().cuid2();
+const validator = z.number();
 
 export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
   const headers = new Headers({
@@ -15,7 +15,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: { id: stri
     return new Response(JSON.stringify({ error: 'Invalid ID' }), { status: 400, headers });
   }
 
-  const query = await sql`DELETE FROM "MLS_Link" WHERE id = ${params.id} RETURNING *;`;
+  const query = await sql`DELETE FROM "Link" WHERE id = ${params.id} RETURNING *;`;
 
   if (query.rowCount === 0) {
     return new Response(

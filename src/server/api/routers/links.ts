@@ -1,5 +1,4 @@
 import { sql } from '@vercel/postgres';
-import { createId } from '@paralleldrive/cuid2';
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 
@@ -19,16 +18,16 @@ export const linkRouter = createTRPCRouter({
       const client = await sql.connect();
       const links = await client.sql<ShortLink>`
           SELECT id, url, slug, password, "expiresAt"
-          FROM "MLS_Link"
+          FROM "Link"
           ORDER BY "createdAt"
           OFFSET ${(page - 1) * pageSize}
           LIMIT ${pageSize};
       `;
-      const countQuery = await client.sql<{ id: string }>`SELECT id FROM "MLS_Link";`;
+      const countQuery = await client.sql<{ id: number }>`SELECT id FROM "Link";`;
 
       client.release();
 
-      return { results: links.rows, count: countQuery.rowCount };
+      return { results: links.rows.map((link) => ({ ...link, id: Number(link.id) })), count: countQuery.rowCount };
     }),
 
   create: protectedProcedure
@@ -42,7 +41,7 @@ export const linkRouter = createTRPCRouter({
       const { url, slug, password, expiresAt } = input;
 
       const client = await sql.connect();
-      const query = await client.sql<ShortLink>`SELECT slug FROM "MLS_Link" WHERE slug = ${slug};`;
+      const query = await client.sql<ShortLink>`SELECT slug FROM "Link" WHERE slug = ${slug};`;
 
       if (query.rowCount) {
         throw new TRPCError({
@@ -52,8 +51,8 @@ export const linkRouter = createTRPCRouter({
       }
 
       const link = await client.sql<ShortLink>`
-        INSERT INTO "MLS_Link" (id, url, slug, password, "expiresAt", "createdAt")
-        VALUES (${createId()}, ${url}, ${slug}, ${password}, ${expiresAt}, NOW())
+        INSERT INTO "Link" (url, slug, password, "expiresAt", "createdAt")
+        VALUES (${url}, ${slug}, ${password}, ${expiresAt}, NOW())
         RETURNING *;
       `;
 
@@ -64,7 +63,7 @@ export const linkRouter = createTRPCRouter({
 
   update: protectedProcedure
     .input(z.object({
-      id: z.string().cuid2(),
+      id: z.number(),
       url: z.string().url(),
       slug: z.string(),
       password: z.string().nullish(),
@@ -75,7 +74,7 @@ export const linkRouter = createTRPCRouter({
 
       const client = await sql.connect();
 
-      const linkBySlug = await client.sql<ShortLink>`SELECT id, slug FROM "MLS_Link" WHERE slug = ${slug};`;
+      const linkBySlug = await client.sql<ShortLink>`SELECT id, slug FROM "Link" WHERE slug = ${slug};`;
 
       if (linkBySlug.rowCount > 0 && linkBySlug.rows[0]!.id !== id) {
         client.release();
@@ -86,7 +85,7 @@ export const linkRouter = createTRPCRouter({
       }
 
       const link = await client.sql<ShortLink>`
-        UPDATE "MLS_Link" SET url = ${url}, slug = ${slug}, password = ${password}, "expiresAt" = ${expiresAt}
+        UPDATE "Link" SET url = ${url}, slug = ${slug}, password = ${password}, "expiresAt" = ${expiresAt}
         WHERE id = ${id}
         RETURNING *;
       `;
@@ -105,11 +104,11 @@ export const linkRouter = createTRPCRouter({
     }),
 
   delete: protectedProcedure
-    .input(z.object({ id: z.string().cuid2() }))
+    .input(z.object({ id: z.number() }))
     .mutation(async ({ input }) => {
       const { id } = input;
 
-      const query = await sql`DELETE FROM "MLS_Link" WHERE id = ${id} RETURNING *;`;
+      const query = await sql`DELETE FROM "Link" WHERE id = ${id} RETURNING *;`;
 
       if (!query.rowCount) {
         throw new TRPCError({

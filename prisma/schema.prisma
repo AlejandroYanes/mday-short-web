@@ -13,19 +13,19 @@ datasource db {
     relationMode = "prisma"
 }
 
-model MLS_Link {
-    id              String          @id
+model Link {
+    id              BigInt          @id @default(autoincrement())
     url             String
     slug            String
     password        String?
     expiresAt       DateTime?
     createdAt       DateTime        @default(now())
-    postedBy        MLS_User?       @relation(fields: [postedById], references: [id])
-    postedById      String?
+    postedBy        User?       @relation(fields: [postedById], references: [id])
+    postedById      BigInt?
 }
 
-model MLS_Analytic {
-    id              String      @id
+model Analytic {
+    id              BigInt      @id @default(autoincrement())
     experiment      String
     variant         String      @default("default")
     event           String
@@ -37,9 +37,16 @@ model MLS_Analytic {
     createdAt       DateTime    @default(now())
 }
 
-model MLS_User {
-    id      String      @id
+model User {
+    id          BigInt      @id @default(autoincrement())
+    name        String?
+    links       Link[]
+    workspaces  Workspace[]
+}
+
+model Workspace {
+    id      BigInt      @id @default(autoincrement())
     name    String
     slug    String      @unique
-    links   MLS_Link[]
+    users   User[]
 }
