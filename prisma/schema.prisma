@@ -17,11 +17,14 @@ model Link {
     id              BigInt          @id @default(autoincrement())
     url             String
     slug            String
+    wslug           String
     password        String?
     expiresAt       DateTime?
     createdAt       DateTime        @default(now())
-    postedBy        User?       @relation(fields: [postedById], references: [id])
+    postedBy        User?           @relation(fields: [postedById], references: [id])
     postedById      BigInt?
+    @@unique([wslug, slug])
+    @@index([wslug, slug], name: "wslug_slug_index")
 }
 
 model Analytic {

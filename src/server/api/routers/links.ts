@@ -51,8 +51,8 @@ export const linkRouter = createTRPCRouter({
       }
 
       const link = await client.sql<ShortLink>`
-        INSERT INTO "Link" (url, slug, password, "expiresAt", "createdAt")
-        VALUES (${url}, ${slug}, ${password}, ${expiresAt}, NOW())
+        INSERT INTO "Link" (url, slug, wslug, password, "expiresAt", "createdAt")
+        VALUES (${url}, ${slug}, 'devland', ${password}, ${expiresAt}, NOW())
         RETURNING *;
       `;
 
