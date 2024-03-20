@@ -23,6 +23,7 @@ model Link {
     createdAt       DateTime        @default(now())
     postedBy        User?           @relation(fields: [postedById], references: [id])
     postedById      BigInt?
+
     @@unique([wslug, slug])
     @@index([wslug, slug], name: "wslug_slug_index")
 }
@@ -44,12 +45,17 @@ model User {
     id          BigInt      @id @default(autoincrement())
     name        String?
     links       Link[]
-    workspaces  Workspace[]
 }
 
 model Workspace {
     id      BigInt      @id @default(autoincrement())
     name    String
     slug    String      @unique
-    users   User[]
+}
+
+model UserInWorkspace {
+    userId          BigInt
+    workspaceId     BigInt
+
+    @@id([userId, workspaceId])
 }
