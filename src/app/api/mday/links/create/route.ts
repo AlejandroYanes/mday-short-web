@@ -34,7 +34,10 @@ export async function POST(req: NextRequest) {
 
   if (linkBySlug.rowCount > 0) {
     client.release();
-    return new Response(JSON.stringify({ success: false, error: 'Slug already exists somewhere else.' }), { status: 400, headers });
+    return new Response(
+      JSON.stringify({ success: false, field: 'slug', error: 'The short name already exists somewhere else.' }),
+      { status: 400, headers },
+    );
   }
 
   const query = await client.sql<NewShortLink>`

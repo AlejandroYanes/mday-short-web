@@ -34,7 +34,10 @@ export async function PUT(req: NextRequest) {
 
   if (linkBySlug.rowCount > 0 && linkBySlug.rows[0]!.id !== parse.data.id) {
     client.release();
-    return new Response(JSON.stringify({ success: false, error: 'Slug already exists somewhere else.' }), { status: 400, headers });
+    return new Response(
+      JSON.stringify({ success: false, field: 'slug', error: 'Slug already exists somewhere else.' }),
+      { status: 400, headers },
+    );
   }
 
   const query = await client.sql<NewShortLink>`
@@ -45,7 +48,10 @@ export async function PUT(req: NextRequest) {
 
   if (query.rowCount === 0) {
     client.release();
-    return new Response(JSON.stringify({ success: false, error: 'Not Found' }), { status: 404, headers });
+    return new Response(
+      JSON.stringify({ success: false, field: 'not-found', error: 'The link could not be found.' }),
+      { status: 404, headers },
+    );
   }
 
   return new Response(JSON.stringify(query.rows[0]), { status: 200, headers });
