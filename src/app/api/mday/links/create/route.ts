@@ -41,8 +41,8 @@ export async function POST(req: NextRequest) {
   }
 
   const query = await client.sql<NewShortLink>`
-    INSERT INTO "Link" (id, url, slug, password, "expiresAt", "createdAt")
-    VALUES (${createId()}, ${url}, ${slug}, ${password}, ${expiresAt}, NOW())
+    INSERT INTO "Link" (id, url, slug, wslug, password, "expiresAt", "createdAt")
+    VALUES (${createId()}, ${url}, ${slug}, 'devland', ${password}, ${expiresAt}, NOW())
     RETURNING *;
   `;
 
