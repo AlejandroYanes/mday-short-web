@@ -1,6 +1,5 @@
 import type { NextRequest } from 'next/server';
 import { sql } from '@vercel/postgres';
-import { createId } from '@paralleldrive/cuid2';
 import { z } from 'zod';
 
 import type { NewShortLink } from 'models/links';
@@ -41,8 +40,8 @@ export async function POST(req: NextRequest) {
   }
 
   const query = await client.sql<NewShortLink>`
-    INSERT INTO "Link" (id, url, slug, wslug, password, "expiresAt", "createdAt")
-    VALUES (${createId()}, ${url}, ${slug}, 'devland', ${password}, ${expiresAt}, NOW())
+    INSERT INTO "Link" (url, slug, wslug, password, "expiresAt", "createdAt")
+    VALUES (${url}, ${slug}, 'devland', ${password}, ${expiresAt}, NOW())
     RETURNING *;
   `;
 

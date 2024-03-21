@@ -4,14 +4,14 @@ import { sql } from '@vercel/postgres';
 
 const validator = z.number();
 
-export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_req: NextRequest, { params }: { params: { id: number } }) {
   const headers = new Headers({
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   });
 
-  if (!validator.safeParse(params.id).success) {
+  if (!validator.safeParse(Number(params.id)).success) {
     return new Response(JSON.stringify({ error: 'Invalid ID' }), { status: 400, headers });
   }
 
