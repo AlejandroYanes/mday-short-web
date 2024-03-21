@@ -12,6 +12,7 @@ import superjson from 'superjson';
 import { ZodError } from 'zod';
 
 import { db } from 'server/db';
+import { MONDAY_WEB_SESSION_COOKIE } from 'utils/cookies';
 
 /**
  * 1. CONTEXT
@@ -26,7 +27,7 @@ import { db } from 'server/db';
  * @see https://trpc.io/docs/server/context
  */
 export const createTRPCContext = async (opts: { headers: Headers }) => {
-  const session = cookies().get('mls_authenticated');
+  const session = cookies().get(MONDAY_WEB_SESSION_COOKIE);
   const isAuthed = !!session;
   return {
     db,

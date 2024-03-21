@@ -4,12 +4,22 @@ import { cookies } from 'next/headers';
 import { sql } from '@vercel/postgres';
 
 import type { ShortLink } from 'models/links';
+import { VISITOR_ACCESS_COOKIE } from 'utils/cookies';
+import { updateSession } from 'utils/auth';
 
 export const config = {
-  matcher: ['/visit/:slug*'],
+  matcher: [
+    '/visit/:slug',
+    '/api/mday/links/:path*',
+  ],
 }
 
 export async function middleware(req: NextRequest) {
+  console.log('req.nextUrl.pathname', req.nextUrl.pathname);
+  if (req.nextUrl.pathname.startsWith('/api/mday/links') && req.method !== 'OPTIONS') {
+    return updateSession(req);
+  }
+
   // const visitorCookie = req.cookies.get(VISITOR_ID_COOKIE);
   // const visitorId = visitorCookie?.value || createId();
 
@@ -34,7 +44,7 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  const query = await sql`SELECT url, password, "expiresAt" from "MLS_Link" WHERE slug = ${slug}`;
+  const query = await sql`SELECT url, password, "expiresAt" from "Link" WHERE slug = ${slug}`;
   const link = query.rows[0] as ShortLink;
 
   if (!query.rowCount) {
@@ -43,7 +53,7 @@ export async function middleware(req: NextRequest) {
   }
 
   if (link.password) {
-    const access = cookies().get(`mls_${slug}_access`)?.value;
+    const access = cookies().get(VISITOR_ACCESS_COOKIE(slug))?.value;
 
     if (access !== 'granted') {
       url.pathname = '/link/access';

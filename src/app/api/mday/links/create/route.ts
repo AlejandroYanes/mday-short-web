@@ -3,6 +3,7 @@ import { sql } from '@vercel/postgres';
 import { z } from 'zod';
 
 import type { NewShortLink } from 'models/links';
+import { resolveSession } from 'utils/auth';
 
 const validator = z.object({
   url: z.string(),
@@ -12,6 +13,12 @@ const validator = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  const session = await resolveSession();
+
+  if (!session) {
+    return new Response(JSON.stringify({ status: 'unauthorized' }), { status: 401 });
+  }
+
   const body: NewShortLink = await req.json();
   const parse = validator.safeParse(body);
 
@@ -29,19 +36,23 @@ export async function POST(req: NextRequest) {
 
   const client = await sql.connect();
 
-  const linkBySlug = await client.sql<NewShortLink>`SELECT slug FROM "Link" WHERE slug = ${slug};`;
+  const workspaceQuery = await client.sql<{ id: number; slug: string }>`
+    SELECT id, slug FROM "Workspace" WHERE id = ${session.workspace}
+  `;
+  const workspace = workspaceQuery.rows[0]!;
+  const linkBySlug = await client.sql<NewShortLink>`SELECT slug FROM "Link" WHERE slug = ${slug} AND wslug=${workspace.slug};`;
 
   if (linkBySlug.rowCount > 0) {
     client.release();
     return new Response(
-      JSON.stringify({ success: false, field: 'slug', error: 'The short name already exists somewhere else.' }),
+      JSON.stringify({ success: false, field: 'slug', error: 'The short name already exists.' }),
       { status: 400, headers },
     );
   }
 
   const query = await client.sql<NewShortLink>`
     INSERT INTO "Link" (url, slug, wslug, password, "expiresAt", "createdAt")
-    VALUES (${url}, ${slug}, 'devland', ${password}, ${expiresAt}, NOW())
+    VALUES (${url}, ${slug}, ${workspace.slug}, ${password}, ${expiresAt}, NOW())
     RETURNING *;
   `;
 
