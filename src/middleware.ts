@@ -5,21 +5,14 @@ import { sql } from '@vercel/postgres';
 
 import type { ShortLink } from 'models/links';
 import { VISITOR_ACCESS_COOKIE } from 'utils/cookies';
-import { updateSession } from 'utils/auth';
 
 export const config = {
   matcher: [
     '/visit/:slug',
-    '/api/mday/links/:path*',
   ],
 }
 
 export async function middleware(req: NextRequest) {
-  console.log('req.nextUrl.pathname', req.nextUrl.pathname);
-  if (req.nextUrl.pathname.startsWith('/api/mday/links') && req.method !== 'OPTIONS') {
-    return updateSession(req);
-  }
-
   // const visitorCookie = req.cookies.get(VISITOR_ID_COOKIE);
   // const visitorId = visitorCookie?.value || createId();
 

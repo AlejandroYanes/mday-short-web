@@ -67,7 +67,9 @@ export async function POST(req: NextRequest) {
   await client.sql`INSERT INTO "UserInWorkspace" ("workspaceId", "userId") VALUES (${workspaceId}, ${userId})`;
 
   client.release();
-  await initiateSession(workspace, user);
+  const sessionToken = await initiateSession({ workspace, user, wslug: workspaceQuery.rows[0]!.slug });
+  headers.set('Authorization', `Bearer ${sessionToken}`);
+
   return new Response(JSON.stringify({ status: 'created' }), { status: 200, headers });
 }
 

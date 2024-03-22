@@ -13,7 +13,7 @@ const validator = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  const session = await resolveSession();
+  const session = await resolveSession(req);
 
   if (!session) {
     return new Response(JSON.stringify({ status: 'unauthorized' }), { status: 401 });
@@ -36,11 +36,7 @@ export async function POST(req: NextRequest) {
 
   const client = await sql.connect();
 
-  const workspaceQuery = await client.sql<{ id: number; slug: string }>`
-    SELECT id, slug FROM "Workspace" WHERE id = ${session.workspace}
-  `;
-  const workspace = workspaceQuery.rows[0]!;
-  const linkBySlug = await client.sql<NewShortLink>`SELECT slug FROM "Link" WHERE slug = ${slug} AND wslug=${workspace.slug};`;
+  const linkBySlug = await client.sql<NewShortLink>`SELECT slug FROM "Link" WHERE slug = ${slug} AND wslug = ${session.wslug};`;
 
   if (linkBySlug.rowCount > 0) {
     client.release();
@@ -52,7 +48,7 @@ export async function POST(req: NextRequest) {
 
   const query = await client.sql<NewShortLink>`
     INSERT INTO "Link" (url, slug, wslug, password, "expiresAt", "createdAt")
-    VALUES (${url}, ${slug}, ${workspace.slug}, ${password}, ${expiresAt}, NOW())
+    VALUES (${url}, ${slug}, ${session.wslug}, ${password}, ${expiresAt}, NOW())
     RETURNING *;
   `;
 

@@ -2,9 +2,17 @@ import type { NextRequest } from 'next/server';
 import { z } from 'zod';
 import { sql } from '@vercel/postgres';
 
+import { resolveSession } from 'utils/auth';
+
 const validator = z.number();
 
-export async function DELETE(_req: NextRequest, { params }: { params: { id: number } }) {
+export async function DELETE(req: NextRequest, { params }: { params: { id: number } }) {
+  const session = await resolveSession(req);
+
+  if (!session) {
+    return new Response(JSON.stringify({ status: 'unauthorized' }), { status: 401 });
+  }
+
   const headers = new Headers({
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
@@ -15,7 +23,10 @@ export async function DELETE(_req: NextRequest, { params }: { params: { id: numb
     return new Response(JSON.stringify({ error: 'Invalid ID' }), { status: 400, headers });
   }
 
-  const query = await sql`DELETE FROM "Link" WHERE id = ${params.id} RETURNING *;`;
+  const query = await sql`
+    DELETE FROM "Link"
+           WHERE id = ${params.id} AND wslug = ${session.wslug}
+           RETURNING *;`;
 
   if (query.rowCount === 0) {
     return new Response(

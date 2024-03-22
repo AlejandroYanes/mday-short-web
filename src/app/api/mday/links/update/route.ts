@@ -3,6 +3,7 @@ import { sql } from '@vercel/postgres';
 import { z } from 'zod';
 
 import type { NewShortLink, ShortLink } from 'models/links';
+import { resolveSession } from 'utils/auth';
 
 const validator = z.object({
   id: z.number(),
@@ -13,6 +14,12 @@ const validator = z.object({
 });
 
 export async function PUT(req: NextRequest) {
+  const session = await resolveSession(req);
+
+  if (!session) {
+    return new Response(JSON.stringify({ status: 'unauthorized' }), { status: 401 });
+  }
+
   const body: NewShortLink = await req.json();
   const parse = validator.safeParse(body);
 
@@ -30,19 +37,21 @@ export async function PUT(req: NextRequest) {
 
   const client = await sql.connect();
 
-  const linkBySlug = await client.sql<ShortLink>`SELECT slug FROM "Link" WHERE slug = ${slug};`;
+  const linkBySlug = await client.sql<ShortLink>`
+    SELECT slug FROM "Link" WHERE slug = ${slug} AND wslug = ${session.wslug};
+   `;
 
   if (linkBySlug.rowCount > 0 && linkBySlug.rows[0]!.id !== parse.data.id) {
     client.release();
     return new Response(
-      JSON.stringify({ success: false, field: 'slug', error: 'Slug already exists somewhere else.' }),
+      JSON.stringify({ success: false, field: 'slug', error: 'The short name already exists.' }),
       { status: 400, headers },
     );
   }
 
   const query = await client.sql<NewShortLink>`
     UPDATE "Link" SET url = ${url}, slug = ${slug}, password = ${password}, "expiresAt" = ${expiresAt}
-    WHERE id = ${parse.data.id}
+    WHERE id = ${parse.data.id} AND wslug = ${session.wslug}
     RETURNING *;
   `;
 

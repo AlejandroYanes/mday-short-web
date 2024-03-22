@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
   const { workspace, user } = parsedBody.data;
   const client = await sql.connect();
 
-  const workspaceQuery = await client.sql`SELECT id FROM "Workspace" WHERE id = ${workspace}`;
+  const workspaceQuery = await client.sql<{ id: number; slug: string }>`SELECT id, slug FROM "Workspace" WHERE id = ${workspace}`;
 
   if (workspaceQuery.rows.length === 0) {
     client.release();
@@ -48,6 +48,9 @@ export async function POST(req: NextRequest) {
     await client.sql`INSERT INTO "User" (id) VALUES (${user})`;
     await client.sql`INSERT INTO "UserInWorkspace" ("workspaceId", "userId") VALUES (${workspace}, ${user})`;
     client.release();
+
+    const sessionToken = await initiateSession({ workspace, user, wslug: workspaceQuery.rows[0]!.slug });
+    headers.set('Authorization', `Bearer ${sessionToken}`);
 
     return new Response(JSON.stringify({ status: 'found' }), { status: 200, headers });
   }
@@ -66,8 +69,9 @@ export async function POST(req: NextRequest) {
   }
 
   client.release();
-  await initiateSession(workspace, user);
-  return new Response(JSON.stringify({ status: 'found' }), { status: 200, headers });
+
+  const sessionToken = await initiateSession({ workspace, user, wslug: workspaceQuery.rows[0]!.slug });
+  return new Response(JSON.stringify({ status: 'found', sessionToken }), { status: 200, headers });
 }
 
 export async function OPTIONS() {
