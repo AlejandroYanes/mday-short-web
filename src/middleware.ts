@@ -9,7 +9,12 @@ import { VISITOR_ACCESS_COOKIE } from 'utils/cookies';
 export const config = {
   matcher: [
     '/v/:wslug/:slug*',
-    '/embed/:mid*'
+    // TODO: this is a list of Monday.com paths that can not be handled by this middleware
+    //       this would allow for url masking but the form it's protected with CORS
+    //       might be worth to add a UI options and let users toggle it on/off
+    // '/embed/:mid*',
+    // '/forms/:mid*',
+    // '/cdn-cgi/:path*',
   ],
 }
 
@@ -31,12 +36,27 @@ export async function middleware(req: NextRequest) {
   //   });
   // }
 
-  if (req.nextUrl.pathname.startsWith('/embed')) {
-    // re-route the req to https://view.monday.com
-    const mid = req.nextUrl.pathname.split('/')[2];
-    const url = new URL(`https://view.monday.com/embed/${mid}`);
-    return NextResponse.redirect(url);
-  }
+  // TODO: these are the Monday.com paths that can not be handled by this middleware
+  // if (req.nextUrl.pathname.startsWith('/embed')) {
+  //   // re-route the req to https://view.monday.com
+  //   const mid = req.nextUrl.pathname.split('/')[2];
+  //   const url = new URL(`https://view.monday.com/embed/${mid}`);
+  //   return NextResponse.redirect(url);
+  // }
+  //
+  // if (req.nextUrl.pathname.startsWith('/forms')) {
+  //   // re-route the req to https://forms.monday.com/forms
+  //   const mid = req.nextUrl.pathname.split('/')[2];
+  //   const url = new URL(`https://forms.monday.com/forms/${mid}`);
+  //   return NextResponse.redirect(url);
+  // }
+  //
+  // if (req.nextUrl.pathname.startsWith('/cdn-cgi')) {
+  //   // re-route the req to https://forms.monday.com/cdn-cgi
+  //   const path = req.nextUrl.pathname.split('/').slice(2).join('/');
+  //   const url = new URL(`https://forms.monday.com/${path}`);
+  //   return NextResponse.redirect(url);
+  // }
 
   const wslug = req.nextUrl.pathname.split('/')[2];
   const slug = req.nextUrl.pathname.split('/')[3];
@@ -70,8 +90,8 @@ export async function middleware(req: NextRequest) {
     return NextResponse.rewrite(url);
   }
 
-  // return NextResponse.redirect(link.url);
-  return NextResponse.rewrite(link.url);
+  return NextResponse.redirect(link.url);
+  // return NextResponse.rewrite(link.url);
 
   // if (variant !== 'default') {
   //   url.pathname = `/x/${variant}`;
