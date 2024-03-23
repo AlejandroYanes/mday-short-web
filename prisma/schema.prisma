@@ -48,14 +48,16 @@ model User {
 }
 
 model Workspace {
-    id      BigInt      @id @default(autoincrement())
-    name    String
-    slug    String      @unique
+    id        BigInt      @id @default(autoincrement())
+    name      String
+    slug      String      @unique
 }
 
 model UserInWorkspace {
     userId          BigInt
     workspaceId     BigInt
+    role            String
+    status          String
 
     @@id([userId, workspaceId])
 }

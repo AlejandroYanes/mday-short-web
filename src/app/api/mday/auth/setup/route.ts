@@ -4,6 +4,8 @@ import { z } from 'zod';
 
 import { KEBAB_CASE_REGEX } from 'utils/strings';
 import { initiateSession } from 'utils/auth';
+import { WorkspaceRole, WorkspaceStatus } from 'models/user-in-workspace';
+import { Workspace } from 'models/workspace';
 
 const validator = z.object({
   workspace: z.number(),
@@ -63,11 +65,15 @@ export async function POST(req: NextRequest) {
     await client.sql`INSERT INTO "User" (id) VALUES (${userId})`;
   }
 
-  await client.sql`INSERT INTO "Workspace" (id, name, slug) VALUES (${workspaceId}, ${name}, ${wslug})`;
-  await client.sql`INSERT INTO "UserInWorkspace" ("workspaceId", "userId") VALUES (${workspaceId}, ${userId})`;
+  const newWorkspaceQuery = await client.sql<Workspace>`
+    INSERT INTO "Workspace" (id, name, slug) VALUES (${workspaceId}, ${name}, ${wslug}) RETURNING *;
+    `;
+  await client.sql`
+    INSERT INTO "UserInWorkspace" ("workspaceId", "userId", role, status)
+    VALUES (${workspaceId}, ${userId}, ${WorkspaceRole.OWNER}, ${WorkspaceStatus.ACTIVE})`;
 
   client.release();
-  const sessionToken = await initiateSession({ workspace, user, wslug: workspaceQuery.rows[0]!.slug });
+  const sessionToken = await initiateSession({ workspace, user, wslug: newWorkspaceQuery.rows[0]!.slug });
   headers.set('Authorization', `Bearer ${sessionToken}`);
 
   return new Response(JSON.stringify({ status: 'created' }), { status: 200, headers });
