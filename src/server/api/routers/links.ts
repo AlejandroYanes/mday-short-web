@@ -13,13 +13,13 @@ export const linkRouter = createTRPCRouter({
       pageSize: z.number(),
       query: z.string().nullish(),
     }))
-    .query(async ({ input }) => {
+    .query(async ({ ctx: { session }, input }) => {
       const { page, pageSize } = input;
 
       const client = await sql.connect();
       const links = await client.sql<ShortLink>`
           SELECT id, url, slug, wslug, password, "expiresAt"
-          FROM "Link"
+          FROM "Link" WHERE wslug = ${session.wslug}
           ORDER BY "createdAt"
           OFFSET ${(page - 1) * pageSize}
           LIMIT ${pageSize};

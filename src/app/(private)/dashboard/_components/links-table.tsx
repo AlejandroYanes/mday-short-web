@@ -55,7 +55,7 @@ export default function LinksTable() {
               </TableCell>
 
               <TableCell className="text-center">
-                <Link href={`/visit/${link.wslug}/${link.slug}`} target="_blank">
+                <Link href={`/v/${link.wslug}/${link.slug}`} target="_blank">
                   <span className="hover:text-emerald-500 underline">
                     {link.slug}
                   </span>

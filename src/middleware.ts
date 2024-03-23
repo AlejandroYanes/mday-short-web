@@ -8,7 +8,8 @@ import { VISITOR_ACCESS_COOKIE } from 'utils/cookies';
 
 export const config = {
   matcher: [
-    '/visit/:wslug/:slug*',
+    '/v/:wslug/:slug*',
+    '/embed/:mid*'
   ],
 }
 
@@ -29,6 +30,14 @@ export async function middleware(req: NextRequest) {
   //     device: device.type,
   //   });
   // }
+
+  if (req.nextUrl.pathname.startsWith('/embed')) {
+    // re-route the req to https://view.monday.com
+    const mid = req.nextUrl.pathname.split('/')[2];
+    const url = new URL(`https://view.monday.com/embed/${mid}`);
+    return NextResponse.redirect(url);
+  }
+
   const wslug = req.nextUrl.pathname.split('/')[2];
   const slug = req.nextUrl.pathname.split('/')[3];
   const url = req.nextUrl.clone();
@@ -61,8 +70,8 @@ export async function middleware(req: NextRequest) {
     return NextResponse.rewrite(url);
   }
 
-  return NextResponse.redirect(link.url);
-  // return NextResponse.rewrite(linkedUrl);
+  // return NextResponse.redirect(link.url);
+  return NextResponse.rewrite(link.url);
 
   // if (variant !== 'default') {
   //   url.pathname = `/x/${variant}`;
