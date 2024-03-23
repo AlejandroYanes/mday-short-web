@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
   }
 
   const query = await sql<ShortLink>`
-    SELECT id, url, slug, password, "expiresAt"
+    SELECT id, url, wslug, slug, password, "expiresAt"
     FROM "Link"
     WHERE wslug = ${session.wslug}
     ORDER BY "createdAt";`;

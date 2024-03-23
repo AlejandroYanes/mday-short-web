@@ -36,6 +36,15 @@ export async function POST(req: NextRequest) {
 
   const client = await sql.connect();
 
+  const userInWorkspace = await client.sql<{ userId: number }>`
+    SELECT "userId" FROM "UserInWorkspace" WHERE "userId" = ${session.user} AND "workspaceId" = ${session.workspace};
+  `;
+
+  if (userInWorkspace.rowCount === 0) {
+    client.release();
+    return new Response(JSON.stringify({ success: false, error: 'incorrect workspace.' }), { status: 400, headers });
+  }
+
   const linkBySlug = await client.sql<NewShortLink>`SELECT slug FROM "Link" WHERE slug = ${slug} AND wslug = ${session.wslug};`;
 
   if (linkBySlug.rowCount > 0) {

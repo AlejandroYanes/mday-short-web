@@ -8,7 +8,7 @@ import { VISITOR_ACCESS_COOKIE } from 'utils/cookies';
 
 export const config = {
   matcher: [
-    '/visit/:slug',
+    '/visit/:wslug/:slug*',
   ],
 }
 
@@ -29,15 +29,16 @@ export async function middleware(req: NextRequest) {
   //     device: device.type,
   //   });
   // }
-  const slug = req.nextUrl.pathname.split('/')[2];
+  const wslug = req.nextUrl.pathname.split('/')[2];
+  const slug = req.nextUrl.pathname.split('/')[3];
   const url = req.nextUrl.clone();
 
-  if (!slug) {
+  if (!wslug || !slug) {
     url.pathname = '/link/not-found';
     return NextResponse.redirect(url);
   }
 
-  const query = await sql`SELECT url, password, "expiresAt" from "Link" WHERE slug = ${slug}`;
+  const query = await sql`SELECT url, password, "expiresAt" from "Link" WHERE slug = ${slug} AND wslug = ${wslug};`;
   const link = query.rows[0] as ShortLink;
 
   if (!query.rowCount) {
