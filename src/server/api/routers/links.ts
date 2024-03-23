@@ -17,7 +17,7 @@ export const linkRouter = createTRPCRouter({
 
       const client = await sql.connect();
       const links = await client.sql<ShortLink>`
-          SELECT id, url, slug, password, "expiresAt"
+          SELECT id, url, slug, wslug, password, "expiresAt"
           FROM "Link"
           ORDER BY "createdAt"
           OFFSET ${(page - 1) * pageSize}
