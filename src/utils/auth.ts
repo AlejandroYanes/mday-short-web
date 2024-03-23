@@ -1,8 +1,10 @@
 import { jwtVerify, SignJWT } from 'jose';
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 
-import type { MondaySession } from '../models/session';
+import type { MondaySession } from 'models/session';
+import { MONDAY_WEB_SESSION_COOKIE } from './cookies';
 
 const secretKey = 'secret';
 const key = new TextEncoder().encode(secretKey);
@@ -34,6 +36,13 @@ export async function resolveSession(req: NextRequest) {
   const sessionToken = authHeader.replace('Bearer ', '');
 
   return (await decrypt(sessionToken)) as MondaySession;
+}
+
+export async function resolveSessionFromCookies() {
+  const sessionToken = cookies().get(MONDAY_WEB_SESSION_COOKIE);
+  if (!sessionToken) return null;
+
+  return (await decrypt(sessionToken.value)) as MondaySession;
 }
 
 export async function updateSession(req: NextRequest) {

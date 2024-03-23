@@ -6,13 +6,11 @@
  * TL;DR - This is where all the tRPC server stuff is created and plugged in. The pieces you will
  * need to use are documented accordingly near the end.
  */
-import { cookies } from 'next/headers';
 import { initTRPC, TRPCError } from '@trpc/server';
 import superjson from 'superjson';
 import { ZodError } from 'zod';
 
-import { db } from 'server/db';
-import { MONDAY_WEB_SESSION_COOKIE } from 'utils/cookies';
+import { resolveSessionFromCookies } from 'utils/auth';
 
 /**
  * 1. CONTEXT
@@ -27,11 +25,10 @@ import { MONDAY_WEB_SESSION_COOKIE } from 'utils/cookies';
  * @see https://trpc.io/docs/server/context
  */
 export const createTRPCContext = async (opts: { headers: Headers }) => {
-  const session = cookies().get(MONDAY_WEB_SESSION_COOKIE);
-  const isAuthed = !!session;
+  const session = await resolveSessionFromCookies();
+
   return {
-    db,
-    isAuthed,
+    session,
     ...opts,
   };
 };
@@ -40,7 +37,7 @@ export const createTRPCContext = async (opts: { headers: Headers }) => {
  * 2. INITIALIZATION
  *
  * This is where the tRPC API is initialized, connecting the context and transformer. We also parse
- * ZodErrors so that you get typesafety on the frontend if your procedure fails due to validation
+ * ZodErrors so that you get type-safety on the frontend if your procedure fails due to validation
  * errors on the backend.
  */
 const t = initTRPC.context<typeof createTRPCContext>().create({
@@ -81,9 +78,14 @@ export const createTRPCRouter = t.router;
 export const publicProcedure = t.procedure;
 
 const enforceUserIsAuthed = t.middleware(({ ctx, next }) => {
-  if (!ctx.isAuthed) {
-    throw new TRPCError({ code: 'UNAUTHORIZED' });
+  if (!ctx.session) {
+    throw new TRPCError({ code: 'UNAUTHORIZED', message: 'The user does not have the appropriate permissions.' });
   }
-  return next();
+  return next({
+    ctx: {
+      session: ctx.session!,
+    },
+
+  });
 });
 export const protectedProcedure = t.procedure.use(enforceUserIsAuthed);

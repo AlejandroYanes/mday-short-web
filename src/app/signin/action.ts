@@ -1,9 +1,11 @@
 'use server'
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
+import { sql } from '@vercel/postgres';
 
 import { env } from 'env';
 import { MONDAY_WEB_SESSION_COOKIE } from 'utils/cookies';
+import { initiateSession } from 'utils/auth';
 
 export async function signin(formData: FormData) {
   const password = formData.get('password');
@@ -12,6 +14,21 @@ export async function signin(formData: FormData) {
   if (!isPasswordValid) {
     return { success: false, message: 'Invalid password' };
   }
-  cookies().set(MONDAY_WEB_SESSION_COOKIE, 'true');
+
+  const query = await sql<{ userId: number; workspaceId: number; wslug: string }>`
+    SELECT U.id as "userId", W.id as "workspaceId", W.slug as wslug
+    FROM "User" U INNER JOIN "UserInWorkspace" UIW on U.id = UIW."userId" INNER JOIN "Workspace" W on UIW."workspaceId" = W.id
+    WHERE U.name = 'devland';
+  `;
+
+  if (!query.rowCount) {
+    return { success: false, message: 'User not found' };
+  }
+
+  const { userId, workspaceId, wslug } = query.rows[0]!;
+
+  const sessionToken = await initiateSession({ user: userId, workspace: workspaceId, wslug });
+
+  cookies().set(MONDAY_WEB_SESSION_COOKIE, sessionToken);
   redirect('/dashboard');
 }

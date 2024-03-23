@@ -4,6 +4,7 @@ import { TRPCError } from '@trpc/server';
 
 import type { ShortLink } from 'models/links';
 import { createTRPCRouter, protectedProcedure } from 'server/api/trpc';
+import { KEBAB_CASE_REGEX } from 'utils/strings';
 
 export const linkRouter = createTRPCRouter({
   list: protectedProcedure
@@ -33,11 +34,11 @@ export const linkRouter = createTRPCRouter({
   create: protectedProcedure
     .input(z.object({
       url: z.string().url(),
-      slug: z.string(),
+      slug: z.string().min(1).regex(KEBAB_CASE_REGEX),
       password: z.string().nullish(),
       expiresAt: z.string().nullish(),
     }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx: { session }, input }) => {
       const { url, slug, password, expiresAt } = input;
 
       const client = await sql.connect();
@@ -52,7 +53,7 @@ export const linkRouter = createTRPCRouter({
 
       const link = await client.sql<ShortLink>`
         INSERT INTO "Link" (url, slug, wslug, password, "expiresAt", "createdAt")
-        VALUES (${url}, ${slug}, 'devland', ${password}, ${expiresAt}, NOW())
+        VALUES (${url}, ${slug}, ${session.wslug}, ${password}, ${expiresAt}, NOW())
         RETURNING *;
       `;
 
@@ -65,16 +66,16 @@ export const linkRouter = createTRPCRouter({
     .input(z.object({
       id: z.number(),
       url: z.string().url(),
-      slug: z.string(),
+      slug: z.string().min(1).regex(KEBAB_CASE_REGEX),
       password: z.string().nullish(),
       expiresAt: z.string().nullish(),
     }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx: { session }, input }) => {
       const { id, url, slug, password, expiresAt } = input;
 
       const client = await sql.connect();
 
-      const linkBySlug = await client.sql<ShortLink>`SELECT id, slug FROM "Link" WHERE slug = ${slug};`;
+      const linkBySlug = await client.sql<ShortLink>`SELECT id, slug FROM "Link" WHERE slug = ${slug} AND wslug = ${session.wslug};`;
 
       if (linkBySlug.rowCount > 0 && linkBySlug.rows[0]!.id !== id) {
         client.release();
@@ -105,10 +106,10 @@ export const linkRouter = createTRPCRouter({
 
   delete: protectedProcedure
     .input(z.object({ id: z.number() }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx: { session }, input }) => {
       const { id } = input;
 
-      const query = await sql`DELETE FROM "Link" WHERE id = ${id} RETURNING *;`;
+      const query = await sql`DELETE FROM "Link" WHERE id = ${id} AND wslug = ${session.wslug} RETURNING *;`;
 
       if (!query.rowCount) {
         throw new TRPCError({
