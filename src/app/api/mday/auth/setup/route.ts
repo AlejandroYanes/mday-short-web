@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { KEBAB_CASE_REGEX } from 'utils/strings';
 import { initiateSession } from 'utils/auth';
 import { WorkspaceRole, WorkspaceStatus } from 'models/user-in-workspace';
-import { Workspace } from 'models/workspace';
+import type { Workspace } from 'models/workspace';
 
 const validator = z.object({
   workspace: z.number(),
