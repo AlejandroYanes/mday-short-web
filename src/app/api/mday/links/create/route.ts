@@ -13,20 +13,20 @@ const validator = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  const session = await resolveSession(req);
-
-  if (!session) {
-    return new Response(JSON.stringify({ status: 'unauthorized' }), { status: 401 });
-  }
-
-  const body: NewShortLink = await req.json();
-  const parse = validator.safeParse(body);
-
   const headers = new Headers({
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   });
+
+  const session = await resolveSession(req);
+
+  if (!session) {
+    return new Response(JSON.stringify({ status: 'unauthorized' }), { status: 401, headers });
+  }
+
+  const body: NewShortLink = await req.json();
+  const parse = validator.safeParse(body);
 
   if (!parse.success) {
     return new Response(JSON.stringify(parse.error), { status: 400, headers });
