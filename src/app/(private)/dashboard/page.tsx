@@ -6,8 +6,7 @@ export default function DashboardPage() {
     <section className="flex min-h-screen flex-col">
       <main className="container flex flex-col items-center gap-12 px-4 py-16">
         <AppBanner />
-        <section className="flex flex-col gap-10 w-[1024px]">
-          <h2 className="text-3xl">Links</h2>
+        <section className="flex flex-col gap-10 w-[1200px]">
           <LinksTable />
         </section>
       </main>

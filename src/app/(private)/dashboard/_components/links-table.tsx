@@ -41,7 +41,7 @@ export default function LinksTable() {
         <TableHeader>
           <TableRow>
             <TableHead>URL</TableHead>
-            <TableHead className="text-center" style={{ width: '170px' }}>Short name</TableHead>
+            <TableHead style={{ width: '170px' }}>Short name</TableHead>
             <TableHead className="text-center" style={{ width: '150px' }}>Password</TableHead>
             <TableHead className="text-center" style={{ width: '150px' }}>Expires On</TableHead>
             <TableHead className="text-center" style={{ width: '80px' }}></TableHead>
@@ -54,7 +54,7 @@ export default function LinksTable() {
                 {link.url}
               </TableCell>
 
-              <TableCell className="text-center">
+              <TableCell>
                 <Link href={`/v/${link.wslug}/${link.slug}`} target="_blank">
                   <span className="hover:text-emerald-500 underline">
                     {link.slug}
