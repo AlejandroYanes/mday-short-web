@@ -43,7 +43,8 @@ model Analytic {
 
 model User {
     id          BigInt      @id @default(autoincrement())
-    name        String?
+    name        String
+    email       String      @unique
     links       Link[]
 }
 
