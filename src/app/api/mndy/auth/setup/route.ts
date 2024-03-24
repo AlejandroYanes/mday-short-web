@@ -4,14 +4,19 @@ import { z } from 'zod';
 
 import { KEBAB_CASE_REGEX } from 'utils/strings';
 import { initiateSession } from 'utils/auth';
-import { WorkspaceRole, WorkspaceStatus } from 'models/user-in-workspace';
+import { type UserInWorkspace, WorkspaceRole, WorkspaceStatus } from 'models/user-in-workspace';
 import type { Workspace } from 'models/workspace';
 
 const validator = z.object({
-  workspace: z.number(),
-  user: z.number(),
-  name: z.string().min(1).max(50),
-  wslug: z.string().min(1).max(20).regex(KEBAB_CASE_REGEX),
+  workspace: z.object({
+    id: z.number(),
+    name: z.string().min(1).max(50),
+    wslug: z.string().min(1).max(20).regex(KEBAB_CASE_REGEX),
+  }),
+  user: z.object({
+    id: z.number(),
+    name: z.string(),
+  }),
 });
 
 export async function POST(req: NextRequest) {
@@ -29,20 +34,17 @@ export async function POST(req: NextRequest) {
     return new Response(JSON.stringify({ status: 'invalid', error: parsedBody.error }), { status: 400, headers });
   }
 
-  const { workspace, user, name, wslug } = parsedBody.data;
-
-  const workspaceId = Number(workspace);
-  const userId = Number(user);
+  const { workspace, user } = parsedBody.data;
 
   const client = await sql.connect();
 
   const workspaceQuery = await client.sql<{ id: number; slug: string }>`
-    SELECT id, slug FROM "Workspace" WHERE id = ${workspaceId} OR slug = ${wslug}
+    SELECT id, slug FROM "Workspace" WHERE id = ${workspace.id} OR slug = ${workspace.wslug}
   `;
 
   if (workspaceQuery.rows.length > 0) {
-    const workspaceExists = workspaceQuery.rows.find((workspaceData) => workspaceData.id === workspaceId);
-    const slugExists = workspaceQuery.rows.find((workspaceData) => workspaceData.slug === wslug);
+    const workspaceExists = workspaceQuery.rows.find((workspaceData) => workspaceData.id === workspace.id);
+    const slugExists = workspaceQuery.rows.find((workspaceData) => workspaceData.slug === workspace.wslug);
 
     if (workspaceExists) {
       client.release();
@@ -59,21 +61,21 @@ export async function POST(req: NextRequest) {
     return new Response(JSON.stringify({ status: 'wrong-workspace' }), { status: 400, headers });
   }
 
-  const userQuery = await client.sql`SELECT id FROM "User" WHERE id = ${userId}`;
+  const userQuery = await client.sql`SELECT id FROM "User" WHERE id = ${user.id}`;
 
   if (userQuery.rows.length === 0) {
-    await client.sql`INSERT INTO "User" (id) VALUES (${userId})`;
+    await client.sql`INSERT INTO "User" (id) VALUES (${user.id})`;
   }
 
   const newWorkspaceQuery = await client.sql<Workspace>`
-    INSERT INTO "Workspace" (id, name, slug) VALUES (${workspaceId}, ${name}, ${wslug}) RETURNING *;
+    INSERT INTO "Workspace" (id, name, slug) VALUES (${workspace.id}, ${workspace.name}, ${workspace.wslug}) RETURNING *;
     `;
-  await client.sql`
+  await client.sql<UserInWorkspace>`
     INSERT INTO "UserInWorkspace" ("workspaceId", "userId", role, status)
-    VALUES (${workspaceId}, ${userId}, ${WorkspaceRole.OWNER}, ${WorkspaceStatus.ACTIVE})`;
+    VALUES (${workspace.id}, ${user.id}, ${WorkspaceRole.OWNER}, ${WorkspaceStatus.ACTIVE})`;
 
   client.release();
-  const sessionToken = await initiateSession({ workspace, user, wslug: newWorkspaceQuery.rows[0]!.slug });
+  const sessionToken = await initiateSession({ workspace: workspace.id, user: user.id, wslug: newWorkspaceQuery.rows[0]!.slug });
   headers.set('Authorization', `Bearer ${sessionToken}`);
 
   return new Response(JSON.stringify({ status: 'created' }), { status: 200, headers });

@@ -9,6 +9,7 @@ export interface UserInWorkspace {
 export enum WorkspaceRole {
   OWNER = 'OWNER',
   USER = 'USER',
+  GUEST = 'GUEST',
 }
 
 export enum WorkspaceStatus {

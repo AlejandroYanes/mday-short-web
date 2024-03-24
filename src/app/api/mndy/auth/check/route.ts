@@ -3,10 +3,12 @@ import { sql } from '@vercel/postgres';
 import { z } from 'zod';
 
 import { initiateSession } from 'utils/auth';
+import { WorkspaceRole, WorkspaceStatus } from 'models/user-in-workspace';
 
 const validator = z.object({
   workspace: z.number(),
   user: z.number(),
+  name: z.string(),
 });
 
 export async function POST(req: NextRequest) {
@@ -28,7 +30,7 @@ export async function POST(req: NextRequest) {
     return new Response(JSON.stringify({ status: 'invalid', error: parsedBody.error }), { status: 400, headers });
   }
 
-  const { workspace, user } = parsedBody.data;
+  const { workspace, user, name } = parsedBody.data;
   const client = await sql.connect();
 
   const workspaceQuery = await client.sql<{ id: number; slug: string }>`SELECT id, slug FROM "Workspace" WHERE id = ${workspace}`;
@@ -45,8 +47,10 @@ export async function POST(req: NextRequest) {
     // TODO: change this to be a request flow, where the user requests to join the workspace
     //       and the workspace owner can accept or reject the request.
     //       This will prevent attackers from adding users (or themselves) to workspaces without permission.
-    await client.sql`INSERT INTO "User" (id) VALUES (${user})`;
-    await client.sql`INSERT INTO "UserInWorkspace" ("workspaceId", "userId") VALUES (${workspace}, ${user})`;
+    await client.sql`INSERT INTO "User" (id, name) VALUES (${user}, ${name})`;
+    await client.sql`
+        INSERT INTO "UserInWorkspace" ("workspaceId", "userId", role, status)
+        VALUES (${workspace}, ${user}, ${WorkspaceRole.USER}, ${WorkspaceStatus.ACTIVE})`;
     client.release();
 
     const sessionToken = await initiateSession({ workspace, user, wslug: workspaceQuery.rows[0]!.slug });

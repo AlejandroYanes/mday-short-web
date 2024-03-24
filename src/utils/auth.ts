@@ -3,11 +3,11 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 
+import { env } from 'env';
 import type { MondaySession } from 'models/session';
 import { MONDAY_WEB_SESSION_COOKIE } from './cookies';
 
-const secretKey = 'secret';
-const key = new TextEncoder().encode(secretKey);
+const key = new TextEncoder().encode(env.MONDAY_CLIENT_SECRET);
 
 export async function encrypt(payload: any) {
   return await new SignJWT(payload)
