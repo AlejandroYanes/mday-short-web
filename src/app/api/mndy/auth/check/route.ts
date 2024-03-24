@@ -2,8 +2,9 @@ import type { NextRequest } from 'next/server';
 import { sql } from '@vercel/postgres';
 import { z } from 'zod';
 
-import { initiateSession } from 'utils/auth';
 import { WorkspaceRole, WorkspaceStatus } from 'models/user-in-workspace';
+import { initiateSession } from 'utils/auth';
+import { resolveCORSHeaders } from 'utils/api';
 
 const validator = z.object({
   workspace: z.number(),
@@ -14,11 +15,7 @@ const validator = z.object({
 export async function POST(req: NextRequest) {
   const body = await req.json();
 
-  const headers = new Headers({
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-  });
+  const headers = resolveCORSHeaders();
 
   if (!body?.workspace || !body?.user) {
     return new Response(JSON.stringify({ status: 'not-found' }), { status: 400, headers });
@@ -53,15 +50,15 @@ export async function POST(req: NextRequest) {
         VALUES (${workspace}, ${user}, ${WorkspaceRole.USER}, ${WorkspaceStatus.ACTIVE})`;
     client.release();
 
-    const sessionToken = await initiateSession({ workspace, user, wslug: workspaceQuery.rows[0]!.slug });
+    const sessionToken = await initiateSession({ workspace, user, wslug: workspaceQuery.rows[0]!.slug, role: WorkspaceRole.USER });
     headers.set('Authorization', `Bearer ${sessionToken}`);
 
     return new Response(JSON.stringify({ status: 'found' }), { status: 200, headers });
   }
 
-  const relationQuery = await client.sql`
-        SELECT FROM "UserInWorkspace"
-               WHERE "workspaceId" = ${workspace} AND "userId" = ${user}
+  const relationQuery = await client.sql<{ role: string }>`
+    SELECT role FROM "UserInWorkspace"
+    WHERE "workspaceId" = ${workspace} AND "userId" = ${user}
   `;
 
   if (relationQuery.rows.length === 0) {
@@ -74,16 +71,17 @@ export async function POST(req: NextRequest) {
 
   client.release();
 
-  const sessionToken = await initiateSession({ workspace, user, wslug: workspaceQuery.rows[0]!.slug });
+  const sessionToken = await initiateSession({
+    workspace,
+    user,
+    wslug: workspaceQuery.rows[0]!.slug,
+    role: relationQuery.rows[0]!.role as WorkspaceRole,
+  });
   return new Response(JSON.stringify({ status: 'found', sessionToken }), { status: 200, headers });
 }
 
 export async function OPTIONS() {
-  const headers = new Headers({
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-  });
+  const headers = resolveCORSHeaders();
 
   return new Response(null, { status: 200, headers });
 }

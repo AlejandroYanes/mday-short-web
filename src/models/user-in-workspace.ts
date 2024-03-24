@@ -14,7 +14,6 @@ export enum WorkspaceRole {
 
 export enum WorkspaceStatus {
   ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
   PENDING = 'PENDING',
-  INVITED = 'INVITED',
-  REJECTED = 'REJECTED',
 }

@@ -24,7 +24,7 @@ export async function decrypt(input: string): Promise<any> {
   return payload;
 }
 
-export async function initiateSession(params: {  user: number; workspace: number; wslug: string }) {
+export async function initiateSession(params: {  user: number; workspace: number; wslug: string; role: string }) {
   const expires = new Date(Date.now() + (60 * 60 * 24 * 7 * 1000)); // 7 days
   return await encrypt({ ...params, expires });
 }

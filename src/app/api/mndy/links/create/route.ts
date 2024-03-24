@@ -4,6 +4,7 @@ import { z } from 'zod';
 
 import type { NewShortLink } from 'models/links';
 import { resolveSession } from 'utils/auth';
+import { resolveCORSHeaders } from 'utils/api';
 
 const validator = z.object({
   url: z.string(),
@@ -13,11 +14,7 @@ const validator = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  const headers = new Headers({
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-  });
+  const headers = resolveCORSHeaders();
 
   const session = await resolveSession(req);
 
