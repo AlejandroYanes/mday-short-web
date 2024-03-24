@@ -17,6 +17,7 @@ const validator = z.object({
   user: z.object({
     id: z.number(),
     name: z.string(),
+    email: z.string().email(),
   }),
 });
 
@@ -61,7 +62,7 @@ export async function POST(req: NextRequest) {
   const userQuery = await client.sql`SELECT id FROM "User" WHERE id = ${user.id}`;
 
   if (userQuery.rows.length === 0) {
-    await client.sql`INSERT INTO "User" (id) VALUES (${user.id})`;
+    await client.sql`INSERT INTO "User" (id, name, email) VALUES (${user.id}, ${user.name}, ${user.email})`;
   }
 
   const newWorkspaceQuery = await client.sql<Workspace>`
