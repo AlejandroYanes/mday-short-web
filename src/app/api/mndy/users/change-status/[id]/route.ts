@@ -23,13 +23,17 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: number
   const input = validator.safeParse(body);
 
   if (!input.success) {
-    return new Response(JSON.stringify({ status: 'invalid' }), { status: 400, headers });
+    return new Response(
+      JSON.stringify({ status: 'invalid', error: input.error.errors }),
+      { status: 400, headers },
+    );
   }
 
   const client = await sql.connect();
 
   const userQuery = await client.sql<{ role: string }>`
-    SELECT role FROM "UserInWorkspace" WHERE "userId" = ${session.user} AND "workspaceId" = ${session.workspace}
+    SELECT role FROM "UserInWorkspace"
+    WHERE "userId" = ${session.user} AND "workspaceId" = ${session.workspace}
   `;
 
   if (!userQuery.rows[0] || userQuery.rows[0].role !== WorkspaceRole.OWNER) {

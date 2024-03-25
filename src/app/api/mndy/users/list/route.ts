@@ -20,7 +20,10 @@ export async function GET(req: NextRequest) {
     FROM "User" U INNER JOIN "UserInWorkspace" UW ON U.id = UW."userId" INNER JOIN "Workspace" W on UW."workspaceId" = W.id
     WHERE W.slug = ${session.wslug} ORDER BY U."createdAt"
   `;
-  return new Response(JSON.stringify({ results: query.rows.map((user) => ({ ...user, id: Number(user.id) } )) }), { status: 200, headers });
+  return new Response(
+    JSON.stringify({ results: query.rows.map((user) => ({ ...user, id: Number(user.id) } )) }),
+    { status: 200, headers },
+  );
 }
 
 export async function OPTIONS() {

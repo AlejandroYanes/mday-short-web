@@ -47,6 +47,8 @@ model User {
     email       String      @unique
     createdAt   DateTime    @default(now())
     links       Link[]
+
+    @@index([email], name: "email_index")
 }
 
 model Workspace {

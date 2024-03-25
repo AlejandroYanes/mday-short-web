@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
   const input = validator.safeParse(body);
 
   if (!input.success) {
-    return new Response(JSON.stringify({ status: 'invalid', error: input.error }), { status: 400, headers });
+    return new Response(JSON.stringify({ status: 'invalid', error: input.error.errors }), { status: 400, headers });
   }
 
   const { workspace, user, name, email } = input.data;
