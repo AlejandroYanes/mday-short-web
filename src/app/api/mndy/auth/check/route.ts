@@ -8,27 +8,21 @@ import { resolveCORSHeaders } from 'utils/api';
 
 const validator = z.object({
   workspace: z.number(),
-  user: z.number(),
   name: z.string(),
   email: z.string().email(),
 });
 
 export async function POST(req: NextRequest) {
-  const body = await req.json();
-
   const headers = resolveCORSHeaders();
 
-  if (!body?.workspace || !body?.user) {
-    return new Response(JSON.stringify({ status: 'not-found' }), { status: 400, headers });
-  }
-
+  const body = await req.json();
   const input = validator.safeParse(body);
 
   if (!input.success) {
     return new Response(JSON.stringify({ status: 'invalid', error: input.error.errors }), { status: 400, headers });
   }
 
-  const { workspace, user, name, email } = input.data;
+  const { workspace, name, email } = input.data;
   const client = await sql.connect();
 
   const workspaceQuery = await client.sql<{ id: number; slug: string }>`SELECT id, slug FROM "Workspace" WHERE id = ${workspace}`;
@@ -38,19 +32,21 @@ export async function POST(req: NextRequest) {
     return new Response(JSON.stringify({ status: 'not-found' }), { status: 200, headers });
   }
 
-  const userQuery = await client.sql`SELECT id FROM "User" WHERE id = ${user}`;
+  const userQuery = await client.sql<{ id: number }>`SELECT id FROM "User" WHERE email = ${email}`;
 
   if (userQuery.rows.length === 0) {
     // workspace exists, but user does not, so we need to create a new user and create join req for the workspace
-    await client.sql`INSERT INTO "User" (id, name, email) VALUES (${user}, ${name}, ${email})`;
+    const newUserQuery = await client.sql<{ id: number }>`INSERT INTO "User" (name, email) VALUES (${name}, ${email}) RETURNING id`;
+    const newUser = newUserQuery.rows[0]!.id;
     await client.sql`
         INSERT INTO "UserInWorkspace" ("workspaceId", "userId", role, status)
-        VALUES (${workspace}, ${user}, ${WorkspaceRole.USER}, ${WorkspaceStatus.PENDING})`;
+        VALUES (${workspace}, ${newUser}, ${WorkspaceRole.USER}, ${WorkspaceStatus.PENDING})`;
     client.release();
 
     return new Response(JSON.stringify({ status: 'pending' }), { status: 200, headers });
   }
 
+  const user = userQuery.rows[0]!.id;
   const relationQuery = await client.sql<{ role: string; status: string }>`
     SELECT role, status FROM "UserInWorkspace"
     WHERE "workspaceId" = ${workspace} AND "userId" = ${user}

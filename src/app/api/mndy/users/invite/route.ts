@@ -54,7 +54,9 @@ export async function POST(req: NextRequest) {
     userId = Number(userQuery.rows[0].id);
   } else {
     const userInsertQuery = await client.sql<{ id: number }>`
-        INSERT INTO "User" (name, email) VALUES (${name}, ${email}) RETURNING id`;
+        INSERT INTO "User" (name, email)
+        VALUES (${name}, ${email})
+        RETURNING id`;
     userId = userInsertQuery.rows[0]!.id;
   }
 

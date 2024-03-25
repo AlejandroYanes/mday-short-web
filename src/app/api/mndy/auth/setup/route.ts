@@ -15,7 +15,6 @@ const validator = z.object({
     wslug: z.string().min(1).max(20).regex(KEBAB_CASE_REGEX),
   }),
   user: z.object({
-    id: z.number(),
     name: z.string(),
     email: z.string().email(),
   }),
@@ -59,10 +58,15 @@ export async function POST(req: NextRequest) {
     return new Response(JSON.stringify({ status: 'wrong-workspace' }), { status: 400, headers });
   }
 
-  const userQuery = await client.sql`SELECT id FROM "User" WHERE id = ${user.id}`;
+  const userQuery = await client.sql<{ id: number }>`SELECT id FROM "User" WHERE email = ${user.email}`;
+  let userId;
 
   if (userQuery.rows.length === 0) {
-    await client.sql`INSERT INTO "User" (id, name, email) VALUES (${user.id}, ${user.name}, ${user.email})`;
+    const newUserQuery = await client.sql<{ id: number }>`
+        INSERT INTO "User" (name, email) VALUES (${user.name}, ${user.email}) RETURNING id`;
+    userId = newUserQuery.rows[0]!.id;
+  } else {
+    userId = userQuery.rows[0]!.id;
   }
 
   const newWorkspaceQuery = await client.sql<Workspace>`
@@ -70,13 +74,13 @@ export async function POST(req: NextRequest) {
     `;
   await client.sql<UserInWorkspace>`
     INSERT INTO "UserInWorkspace" ("workspaceId", "userId", role, status)
-    VALUES (${workspace.id}, ${user.id}, ${WorkspaceRole.OWNER}, ${WorkspaceStatus.ACTIVE})`;
+    VALUES (${workspace.id}, ${userId}, ${WorkspaceRole.OWNER}, ${WorkspaceStatus.ACTIVE})`;
 
   client.release();
 
   const sessionToken = await initiateSession({
     workspace: workspace.id,
-    user: user.id,
+    user: userId,
     wslug: newWorkspaceQuery.rows[0]!.slug,
     role: WorkspaceRole.OWNER,
   });
