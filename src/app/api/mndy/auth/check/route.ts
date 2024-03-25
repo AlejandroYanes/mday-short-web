@@ -19,25 +19,35 @@ export async function POST(req: NextRequest) {
   const input = validator.safeParse(body);
 
   if (!input.success) {
-    return new Response(JSON.stringify({ status: 'invalid', error: input.error.errors }), { status: 400, headers });
+    return new Response(
+      JSON.stringify({ status: 'invalid', error: input.error.errors }),
+      { status: 400, headers },
+    );
   }
 
   const { workspace, name, email } = input.data;
   const client = await sql.connect();
 
-  const workspaceQuery = await client.sql<{ id: number; slug: string }>`SELECT id, slug FROM "Workspace" WHERE id = ${workspace}`;
+  const workspaceQuery = await client.sql<{ id: number; slug: string }>`
+    SELECT id, slug FROM "Workspace" WHERE id = ${workspace}`;
 
   if (workspaceQuery.rows.length === 0) {
     client.release();
     return new Response(JSON.stringify({ status: 'not-found' }), { status: 200, headers });
   }
 
-  const userQuery = await client.sql<{ id: number }>`SELECT id FROM "User" WHERE email = ${email}`;
+  const userQuery = await client.sql<{ id: number }>`
+    SELECT id FROM "User" WHERE email = ${email}`;
 
   if (userQuery.rows.length === 0) {
-    // workspace exists, but user does not, so we need to create a new user and create join req for the workspace
-    const newUserQuery = await client.sql<{ id: number }>`INSERT INTO "User" (name, email) VALUES (${name}, ${email}) RETURNING id`;
+    // workspace exists, but user does not,
+    // so we need to create a new user and create join req for the workspace
+    const newUserQuery = await client.sql<{ id: number }>`
+        INSERT INTO "User" (name, email)
+        VALUES (${name}, ${email}) RETURNING id`;
+
     const newUser = newUserQuery.rows[0]!.id;
+
     await client.sql`
         INSERT INTO "UserInWorkspace" ("workspaceId", "userId", role, status)
         VALUES (${workspace}, ${newUser}, ${WorkspaceRole.USER}, ${WorkspaceStatus.PENDING})`;
@@ -71,6 +81,10 @@ export async function POST(req: NextRequest) {
 
   if (relation.status === WorkspaceStatus.INVITED) {
     return new Response(JSON.stringify({ status: 'invited' }), { status: 200, headers });
+  }
+
+  if (relation.status === WorkspaceStatus.INACTIVE) {
+    return new Response(JSON.stringify({ status: 'inactive' }), { status: 200, headers });
   }
 
   const sessionToken = await initiateSession({
