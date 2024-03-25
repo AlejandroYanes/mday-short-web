@@ -15,15 +15,6 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: numbe
 
   const client = await sql.connect();
 
-  const userQuery = await client.sql<{ role: string }>`
-    SELECT role FROM "UserInWorkspace" WHERE "userId" = ${session.user} AND "workspaceId" = ${session.workspace}
-  `;
-
-  if (!userQuery.rows[0] || userQuery.rows[0].role !== WorkspaceRole.OWNER) {
-    client.release();
-    return new Response(JSON.stringify({ status: 'unauthorized' }), { status: 401, headers });
-  }
-
   const deleteQuery = await client.sql`
     DELETE FROM "UserInWorkspace"
     WHERE "userId" = ${params.id} AND "workspaceId" = ${session.workspace}

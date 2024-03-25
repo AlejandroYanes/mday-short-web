@@ -18,15 +18,20 @@ export async function encrypt(payload: any) {
 }
 
 export async function decrypt(input: string): Promise<any> {
-  const { payload } = await jwtVerify(input, key, {
-    algorithms: ['HS256'],
-  });
-  return payload;
+  try {
+    const { payload } = await jwtVerify(input, key, {
+      algorithms: ['HS256'],
+    });
+    return payload;
+  } catch (error) {
+    console.error('❌ Error decrypting token:', error);
+    return null;
+  }
 }
 
 export async function initiateSession(params: {  user: number; workspace: number; wslug: string; role: string }) {
   const expires = new Date(Date.now() + (60 * 60 * 24 * 7 * 1000)); // 7 days
-  return await encrypt({ ...params, expires });
+  return await encrypt({ ...params, expires: expires.getTime() });
 }
 
 export async function resolveSession(req: NextRequest) {
@@ -58,7 +63,7 @@ export async function updateSession(req: NextRequest) {
     value: await encrypt(session),
     httpOnly: true,
     sameSite: 'none',
-    expires,
+    expires: expires.getTime(),
   });
   return res;
 }

@@ -5,7 +5,7 @@ import { z } from 'zod';
 import type { Workspace } from 'models/workspace';
 import { type UserInWorkspace, WorkspaceRole, WorkspaceStatus } from 'models/user-in-workspace';
 import { KEBAB_CASE_REGEX } from 'utils/strings';
-import { initiateSession } from 'utils/auth';
+import { decrypt, initiateSession } from 'utils/auth';
 import { resolveCORSHeaders } from 'utils/api';
 
 const validator = z.object({
@@ -18,6 +18,7 @@ const validator = z.object({
     name: z.string(),
     email: z.string().email(),
   }),
+  token: z.string(),
 });
 
 export async function POST(req: NextRequest) {
@@ -31,7 +32,13 @@ export async function POST(req: NextRequest) {
     return new Response(JSON.stringify({ status: 'invalid', error: parsedBody.error }), { status: 400, headers });
   }
 
-  const { workspace, user } = parsedBody.data;
+  const { workspace, user, token } = parsedBody.data;
+
+  const session = await decrypt(token);
+
+  if (!session) {
+    return new Response(JSON.stringify({ status: 'unauthorized' }), { status: 401, headers });
+  }
 
   const client = await sql.connect();
 

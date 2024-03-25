@@ -2,13 +2,14 @@ import type { NextRequest } from 'next/server';
 import { sql } from '@vercel/postgres';
 import { z } from 'zod';
 
+import { WorkspaceStatus } from 'models/user-in-workspace';
 import { resolveCORSHeaders } from 'utils/api';
-import { WorkspaceStatus } from '../../../../../models/user-in-workspace';
-import { initiateSession } from '../../../../../utils/auth';
+import { decrypt, initiateSession } from 'utils/auth';
 
 const validator = z.object({
   workspace: z.number(),
   email: z.string().email(),
+  token: z.string(),
 });
 
 export async function POST(req: NextRequest) {
@@ -24,7 +25,14 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { workspace, email } = input.data;
+  const { workspace, email, token } = input.data;
+
+  const session = await decrypt(token);
+
+  if (!session) {
+    return new Response(JSON.stringify({ status: 'unauthorized' }), { status: 401, headers });
+  }
+
   const client = await sql.connect();
 
   const workspaceQuery = await client.sql<{ id: number; slug: string }>`

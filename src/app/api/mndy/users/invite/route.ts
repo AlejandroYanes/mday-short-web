@@ -34,19 +34,10 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const client = await sql.connect();
-
-  const actorQuery = await client.sql<{ role: string }>`
-    SELECT role FROM "UserInWorkspace" WHERE "userId" = ${session.user} AND "workspaceId" = ${session.workspace}
-  `;
-
-  if (!actorQuery.rows[0] || actorQuery.rows[0].role !== WorkspaceRole.OWNER) {
-    client.release();
-    return new Response(JSON.stringify({ status: 'unauthorized' }), { status: 401, headers });
-  }
-
   const { name, email, role } = input.data;
   let userId: number;
+
+  const client = await sql.connect();
 
   const userQuery = await client.sql<{ id: number }>`SELECT id FROM "User" WHERE email = ${email}`;
 
