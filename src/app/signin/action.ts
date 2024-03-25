@@ -15,8 +15,8 @@ export async function signin(formData: FormData) {
     return { success: false, message: 'Invalid password' };
   }
 
-  const query = await sql<{ userId: number; workspaceId: number; wslug: string }>`
-    SELECT U.id as "userId", W.id as "workspaceId", W.slug as wslug
+  const query = await sql<{ userId: number; workspaceId: number; wslug: string; role: string }>`
+    SELECT U.id as "userId", W.id as "workspaceId", W.slug as wslug, UIW.role as role
     FROM "User" U INNER JOIN "UserInWorkspace" UIW on U.id = UIW."userId" INNER JOIN "Workspace" W on UIW."workspaceId" = W.id
     WHERE U.name = 'devland';
   `;
@@ -25,9 +25,14 @@ export async function signin(formData: FormData) {
     return { success: false, message: 'User not found' };
   }
 
-  const { userId, workspaceId, wslug } = query.rows[0]!;
+  const { userId, workspaceId, wslug, role } = query.rows[0]!;
 
-  const sessionToken = await initiateSession({ user: userId, workspace: workspaceId, wslug });
+  const sessionToken = await initiateSession({
+    user: userId,
+    workspace: workspaceId,
+    wslug,
+    role,
+  });
 
   cookies().set(MONDAY_WEB_SESSION_COOKIE, sessionToken);
   redirect('/dashboard');
