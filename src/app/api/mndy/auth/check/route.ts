@@ -83,7 +83,10 @@ export async function POST(req: NextRequest) {
     wslug: workspaceQuery.rows[0]!.slug,
     role: relationQuery.rows[0]!.role as WorkspaceRole,
   });
-  return new Response(JSON.stringify({ status: 'found', sessionToken }), { status: 200, headers });
+  return new Response(
+    JSON.stringify({ status: 'found', sessionToken, role: relationQuery.rows[0]!.role }),
+    { status: 200, headers },
+  );
 }
 
 export async function OPTIONS() {

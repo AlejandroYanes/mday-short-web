@@ -80,7 +80,10 @@ export async function POST(req: NextRequest) {
     wslug: newWorkspaceQuery.rows[0]!.slug,
     role: WorkspaceRole.OWNER,
   });
-  return new Response(JSON.stringify({ status: 'created', sessionToken }), { status: 200, headers });
+  return new Response(
+    JSON.stringify({ status: 'created', sessionToken, role: WorkspaceRole.OWNER }),
+    { status: 200, headers },
+  );
 }
 
 export async function OPTIONS() {
