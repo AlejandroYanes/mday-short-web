@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
   const client = await sql.connect();
 
   const workspaceQuery = await client.sql<{ id: number; slug: string }>`
-    SELECT id, slug FROM "Workspace" WHERE id = ${workspace.id} OR slug = ${workspace.wslug}
+    SELECT id, slug FROM "Workspace" WHERE mid = ${workspace.id} OR slug = ${workspace.wslug}
   `;
 
   if (workspaceQuery.rows.length > 0) {
@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
   }
 
   const newWorkspaceQuery = await client.sql<Workspace>`
-    INSERT INTO "Workspace" (id, name, slug) VALUES (${workspace.id}, ${workspace.name}, ${workspace.wslug}) RETURNING *;
+    INSERT INTO "Workspace" (mid, name, slug) VALUES (${workspace.id}, ${workspace.name}, ${workspace.wslug}) RETURNING *;
     `;
   await client.sql<UserInWorkspace>`
     INSERT INTO "UserInWorkspace" ("workspaceId", "userId", role, status)

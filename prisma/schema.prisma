@@ -53,6 +53,7 @@ model User {
 
 model Workspace {
     id          BigInt      @id @default(autoincrement())
+    mid         BigInt      @unique
     name        String
     slug        String      @unique
     createdAt   DateTime    @default(now())

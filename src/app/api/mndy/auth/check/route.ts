@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
   const client = await sql.connect();
 
   const workspaceQuery = await client.sql<{ id: number; slug: string }>`
-    SELECT id, slug FROM "Workspace" WHERE id = ${workspace}`;
+    SELECT id, slug FROM "Workspace" WHERE mid = ${workspace}`;
 
   if (workspaceQuery.rows.length === 0) {
     client.release();
