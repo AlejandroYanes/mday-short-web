@@ -1,16 +1,15 @@
-import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 
-import { MONDAY_WEB_SESSION_COOKIE } from 'utils/cookies';
+import { resolveSessionFromCookies } from 'utils/auth';
 
 interface Props {
   children: any;
 }
 
-export default function PrivateLayout(props: Props) {
-  const authCookie = cookies().get(MONDAY_WEB_SESSION_COOKIE);
+export default async function PrivateLayout(props: Props) {
+  const session = await resolveSessionFromCookies();
 
-  if (!authCookie) {
+  if (!session) {
     redirect('/signin');
   }
 

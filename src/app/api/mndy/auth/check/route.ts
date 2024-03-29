@@ -34,6 +34,12 @@ export async function POST(req: NextRequest) {
     return new Response(JSON.stringify({ status: 'unauthorized' }), { status: 401, headers });
   }
 
+  const isViewOnly = session.dat.is_view_only;
+
+  if (isViewOnly) {
+    return new Response(JSON.stringify({ status: 'view-only' }), { status: 200, headers });
+  }
+
   const client = await sql.connect();
 
   const workspaceQuery = await client.sql<{ id: number; slug: string }>`
