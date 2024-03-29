@@ -1,3 +1,4 @@
+import { Analytics } from '@vercel/analytics/react';
 import { Inter } from 'next/font/google';
 
 import { TRPCReactProvider } from 'trpc/react';
@@ -27,6 +28,7 @@ export default function RootLayout({ children }: Props) {
             {children}
           </ThemeProvider>
         </TRPCReactProvider>
+        <Analytics />
       </body>
     </html>
   );
