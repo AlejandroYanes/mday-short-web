@@ -16,9 +16,9 @@ function NumberedStep({ number, title, description }: { number: number; title: s
 export default async function Home() {
   return (
     <section className="flex min-h-screen flex-col">
-      <main className="container flex flex-col items-center justify-center gap-12 px-4 py-16 h-screen">
+      <main className="flex flex-col items-center justify-center gap-12 px-6 md:px-4 py-16 min-h-screen">
         <AppBanner />
-        <section data-el="how-it-works" className="flex flex-col max-w-[700px] mx-auto pr-4">
+        <section data-el="how-it-works" className="flex flex-col max-w-[700px] mx-auto">
           <NumberedStep
             number={1}
             title="Nice readable links"
@@ -52,15 +52,18 @@ export default async function Home() {
             <p>Or check out our other pages</p>
             <div className="h-[1px] flex-1 bg-neutral-200" />
           </div>
-          <div className="flex items-center gap-4">
+          <div className="grid grid-cols-2 gap-4">
+            <Link href="/how-to-use">
+              <Button variant="outline-ghost" className="w-full">How to use</Button>
+            </Link>
             <Link href="/pricing">
-              <Button variant="outline-ghost">Pricing</Button>
+              <Button variant="outline-ghost" className="w-full">Pricing</Button>
             </Link>
             <Link href="/terms-of-service">
-              <Button variant="outline-ghost">Terms of Service</Button>
+              <Button variant="outline-ghost" className="w-full">Terms of Service</Button>
             </Link>
             <Link href="/privacy-policy">
-              <Button variant="outline-ghost">Privacy Policy</Button>
+              <Button variant="outline-ghost" className="w-full">Privacy Policy</Button>
             </Link>
           </div>
         </section>

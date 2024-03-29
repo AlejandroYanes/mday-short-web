@@ -14,7 +14,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 export default function PrivacyPolicyPage() {
   return (
     <section className="flex min-h-screen flex-col">
-      <main className="container flex flex-col items-center justify-center gap-12 px-4 py-16 max-w-[700px]">
+      <main className="container flex flex-col items-center justify-center gap-12 px-6 md:px-4 py-16 max-w-[700px]">
         <AppBanner/>
         <section className="flex flex-col gap-6">
           <h2 className="text-4xl text-center">Privacy Policy</h2>
