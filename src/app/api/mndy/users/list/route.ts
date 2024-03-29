@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
 
   const query = await sql<ExtendedUser>`
     SELECT U.id, U.name, U.email, UW.role, UW.status
-    FROM "User" U INNER JOIN "UserInWorkspace" UW ON U.id = UW."userId" INNER JOIN "Workspace" W on UW."workspaceId" = W.id
+    FROM "User" U INNER JOIN "UserInWorkspace" UW ON U.id = UW."userId" INNER JOIN "Workspace" W on UW."workspaceId" = W.mid
     WHERE W.slug = ${session.wslug} ORDER BY U."createdAt"
   `;
   return new Response(
