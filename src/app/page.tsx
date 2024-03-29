@@ -36,7 +36,7 @@ export default async function Home() {
           />
         </section>
 
-        <section className="flex items-center justify-center gap-10">
+        <section className="flex flex-col items-center justify-center gap-10">
           <a
             href="https://auth.monday.com/oauth2/authorize?client_id=514781cd0f0fc5309eb59f13577cb981&response_type=install"
           >
@@ -47,9 +47,22 @@ export default async function Home() {
               src="https://dapulse-res.cloudinary.com/image/upload/f_auto,q_auto/remote_mondaycom_static/uploads/Tal/4b5d9548-0598-436e-a5b6-9bc5f29ee1d9_Group12441.png"
             />
           </a>
-          <Link href="/pricing">
-            <Button variant="outline-ghost">Check our Pricing</Button>
-          </Link>
+          <div className="flex flex-row items-center gap-4 w-full">
+            <div className="h-[1px] flex-1 bg-neutral-200" />
+            <p>Or check out our other pages</p>
+            <div className="h-[1px] flex-1 bg-neutral-200" />
+          </div>
+          <div className="flex items-center gap-4">
+            <Link href="/pricing">
+              <Button variant="outline-ghost">Pricing</Button>
+            </Link>
+            <Link href="/terms-of-service">
+              <Button variant="outline-ghost">Terms of Service</Button>
+            </Link>
+            <Link href="/privacy-policy">
+              <Button variant="outline-ghost">Privacy Policy</Button>
+            </Link>
+          </div>
         </section>
       </main>
     </section>
