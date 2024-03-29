@@ -20,6 +20,7 @@ export * from './input';
 export * from './input-with-label';
 export * from './label';
 export * from './loader';
+export * from './logo';
 export * from './pagination';
 export * from './popover';
 export * from './radio-group';

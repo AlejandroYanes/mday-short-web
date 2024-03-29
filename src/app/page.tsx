@@ -21,7 +21,7 @@ export default async function Home() {
           <NumberedStep
             number={1}
             title="Nice readable links"
-            description="Create links that are easy to read and remember. No more long and confusing URLs."
+            description="Create links that are easy to read and remember from within monday.com. No more long and confusing URLs."
           />
           <NumberedStep
             number={2}
@@ -36,8 +36,8 @@ export default async function Home() {
         </section>
 
         <section className="flex items-center justify-center">
-          <Link href="/signin">
-            <Button variant="black">Get Started</Button>
+          <Link href="/pricing">
+            <Button variant="black">Pricing</Button>
           </Link>
         </section>
       </main>
