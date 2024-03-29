@@ -1,1 +1,1 @@
-export const KEBAB_CASE_REGEX = /^[a-z]+(-[a-z]+)*$/;
+export const KEBAB_CASE_REGEX = /^\w+(-\w+)*$/;

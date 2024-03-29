@@ -22,7 +22,10 @@ export async function GET(req: NextRequest) {
     FROM "Link"
     WHERE wslug = ${session.wslug}
     ORDER BY "createdAt";`;
-  return new Response(JSON.stringify({ results: query.rows }), { status: 200, headers });
+  return new Response(
+    JSON.stringify({ results: query.rows.map((link) => ({ ...link, id: Number(link.id) })) }),
+    { status: 200, headers },
+  );
 }
 
 export async function OPTIONS() {
