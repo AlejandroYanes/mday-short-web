@@ -11,8 +11,8 @@ const inter = Inter({
 });
 
 export const metadata = {
-  title: 'Monday ShortLink Shortener',
-  description: 'Create short links for your Monday.com boards and items',
+  title: 'Short Links for monday.com',
+  description: 'Create short links for your monday.com boards and forms',
 };
 
 interface Props {
