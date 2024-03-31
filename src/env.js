@@ -20,6 +20,8 @@ export const env = createEnv({
     // Monday.com API keys
     MONDAY_CLIENT_ID: z.string(),
     MONDAY_CLIENT_SECRET: z.string(),
+    // Slack
+    SLACK_USERS_CHANNEL: z.string().url(),
     // Platform
     PLATFORM_URL: z.string().url(),
     PLATFORM_PASSWORD: z.string(),
@@ -50,6 +52,7 @@ export const env = createEnv({
     NODE_ENV: process.env.NODE_ENV,
     MONDAY_CLIENT_ID: process.env.MONDAY_CLIENT_ID,
     MONDAY_CLIENT_SECRET: process.env.MONDAY_CLIENT_SECRET,
+    SLACK_USERS_CHANNEL: process.env.SLACK_USERS_CHANNEL,
     PLATFORM_URL: process.env.PLATFORM_URL,
     PLATFORM_PASSWORD: process.env.PLATFORM_PASSWORD,
     // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
