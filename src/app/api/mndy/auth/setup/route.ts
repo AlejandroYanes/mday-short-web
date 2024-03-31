@@ -1,4 +1,4 @@
-import type { NextRequest } from 'next/server';
+import { withAxiom, type AxiomRequest } from 'next-axiom';
 import { sql } from '@vercel/postgres';
 import { z } from 'zod';
 
@@ -21,14 +21,15 @@ const validator = z.object({
   token: z.string(),
 });
 
-export async function POST(req: NextRequest) {
-  const body = await req.json();
-
+export const POST = withAxiom(async(req: AxiomRequest) => {
   const headers = resolveCORSHeaders();
+  const log = req.log.with({ scope: 'user', endpoint: 'mndy/auth/setup', ip: req.ip, method: req.method });
 
+  const body = await req.json();
   const parsedBody = validator.safeParse(body);
 
   if (!parsedBody.success) {
+    log.error('Invalid input', { error: parsedBody.error.errors, body });
     return new Response(JSON.stringify({ status: 'invalid', error: parsedBody.error }), { status: 400, headers });
   }
 
@@ -37,6 +38,7 @@ export async function POST(req: NextRequest) {
   const session = await decrypt(token);
 
   if (!session) {
+    log.error('Invalid token');
     return new Response(JSON.stringify({ status: 'unauthorized' }), { status: 401, headers });
   }
 
@@ -52,28 +54,31 @@ export async function POST(req: NextRequest) {
 
     if (workspaceExists) {
       client.release();
+      log.error('Workspace already exists', { workspace });
       return new Response(JSON.stringify({ status: 'workspace-exists' }), { status: 400, headers });
     }
 
     if (slugExists) {
       client.release();
+      log.error('Workspace slug already exists', { workspace });
       return new Response(JSON.stringify({ status: 'workspace-slug-exists' }), { status: 400, headers });
     }
 
     // not sure about this, I don't think it's possible to reach this point
     client.release();
+    log.error('Wrong workspace', { workspace });
     return new Response(JSON.stringify({ status: 'wrong-workspace' }), { status: 400, headers });
   }
 
-  const userQuery = await client.sql<{ id: number }>`SELECT id FROM "User" WHERE email = ${user.email}`;
+  const userQuery = await client.sql<{ id: string }>`SELECT id FROM "User" WHERE email = ${user.email}`;
   let userId;
 
   if (userQuery.rows.length === 0) {
     const newUserQuery = await client.sql<{ id: number }>`
         INSERT INTO "User" (name, email) VALUES (${user.name}, ${user.email}) RETURNING id`;
-    userId = newUserQuery.rows[0]!.id;
+    userId = Number(newUserQuery.rows[0]!.id);
   } else {
-    userId = userQuery.rows[0]!.id;
+    userId = Number(userQuery.rows[0]!.id);
   }
 
   const newWorkspaceQuery = await client.sql<Workspace>`
@@ -85,20 +90,25 @@ export async function POST(req: NextRequest) {
 
   client.release();
 
+  log.info('Workspace created', {
+    workspace: Number(newWorkspaceQuery.rows[0]!.id),
+    wslug: newWorkspaceQuery.rows[0]!.slug,
+    user: userId,
+  });
+
   const sessionToken = await initiateSession({
     workspace: workspace.id,
     user: userId,
     wslug: newWorkspaceQuery.rows[0]!.slug,
     role: WorkspaceRole.OWNER,
   });
+
   return new Response(
     JSON.stringify({ status: 'created', sessionToken, role: WorkspaceRole.OWNER }),
     { status: 200, headers },
   );
-}
+});
 
 export async function OPTIONS() {
-  const headers = resolveCORSHeaders();
-
-  return new Response(null, { status: 200, headers });
+  return new Response(null, { status: 200, headers:resolveCORSHeaders() });
 }

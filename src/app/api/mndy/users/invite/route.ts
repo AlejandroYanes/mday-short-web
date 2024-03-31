@@ -1,4 +1,4 @@
-import type { NextRequest } from 'next/server';
+import { withAxiom, type AxiomRequest } from 'next-axiom';
 import { sql } from '@vercel/postgres';
 import { z } from 'zod';
 
@@ -16,11 +16,14 @@ const validator = z.object({
   role: z.enum([WorkspaceRole.USER, WorkspaceRole.OWNER, WorkspaceRole.GUEST]),
 });
 
-export async function POST(req: NextRequest) {
+export const POST = withAxiom(async (req: AxiomRequest) => {
   const headers = resolveCORSHeaders();
+  const log = req.log.with({ scope: 'user', endpoint: 'mndy/users/invite', ip: req.ip, method: req.method });
+
   const session = await resolveSession(req);
 
   if (!session || session.role !== WorkspaceRole.OWNER) {
+    log.error('Invalid session', { role: session?.role });
     return new Response(JSON.stringify({ status: 'unauthorized' }), { status: 401, headers });
   }
 
@@ -28,6 +31,7 @@ export async function POST(req: NextRequest) {
   const input = validator.safeParse(body);
 
   if (!input.success) {
+    log.error('Invalid input', { body, error: input.error.errors });
     return new Response(
       JSON.stringify({ status: 'invalid', error: input.error.errors }),
       { status: 400, headers },
@@ -51,14 +55,32 @@ export async function POST(req: NextRequest) {
     userId = userInsertQuery.rows[0]!.id;
   }
 
+  const relationQuery = await client.sql<{ userId: string }>`
+    SELECT "userId"
+    FROM "UserInWorkspace"
+    WHERE "userId" = ${userId} AND "workspaceId" = ${session.workspace}
+  `;
+
+  if (relationQuery.rows[0]) {
+    log.error('User already in workspace', { target: userId, user: session.user, workspace: session.workspace });
+
+    return new Response(
+      JSON.stringify({ status: 'invalid', error: 'The user is already in the workspace' }),
+      { status: 400, headers },
+    );
+  }
+
   await client.sql`
     INSERT INTO "UserInWorkspace" ("workspaceId", "userId", role, status)
     VALUES (${session.workspace}, ${userId}, ${role}, ${WorkspaceStatus.INVITED})
   `;
 
   client.release();
+
+  log.info('User invited', { target: userId, user: session.user, workspace: session.workspace });
+
   return new Response(JSON.stringify({ status: 'success' }), { status: 200, headers });
-}
+});
 
 export function OPTIONS() {
   return new Response(null, { status: 204, headers: resolveCORSHeaders() });

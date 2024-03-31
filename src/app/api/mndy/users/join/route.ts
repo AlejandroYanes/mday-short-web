@@ -1,4 +1,4 @@
-import type { NextRequest } from 'next/server';
+import { withAxiom, type AxiomRequest } from 'next-axiom';
 import { sql } from '@vercel/postgres';
 import { z } from 'zod';
 
@@ -12,13 +12,15 @@ const validator = z.object({
   token: z.string(),
 });
 
-export async function POST(req: NextRequest) {
+export const POST = withAxiom(async (req: AxiomRequest) => {
   const headers = resolveCORSHeaders();
+  const log = req.log.with({ scope: 'user', endpoint: 'mndy/users/join', ip: req.ip, method: req.method });
 
   const body = await req.json();
   const input = validator.safeParse(body);
 
   if (!input.success) {
+    log.error('Invalid input', { body, error: input.error.errors });
     return new Response(
       JSON.stringify({ status: 'invalid', error: input.error.errors }),
       { status: 400, headers },
@@ -30,16 +32,18 @@ export async function POST(req: NextRequest) {
   const session = await decrypt(token);
 
   if (!session) {
+    log.error('Invalid session');
     return new Response(JSON.stringify({ status: 'unauthorized' }), { status: 401, headers });
   }
 
   const client = await sql.connect();
 
-  const workspaceQuery = await client.sql<{ id: number; slug: string }>`
+  const workspaceQuery = await client.sql<{ id: string; slug: string }>`
     SELECT id, slug FROM "Workspace" WHERE mid = ${workspace}`;
 
   if (workspaceQuery.rows.length === 0) {
     client.release();
+    log.error('Workspace not found', { workspace });
     return new Response(JSON.stringify({ status: 'not-found' }), { status: 404, headers });
   }
 
@@ -48,6 +52,7 @@ export async function POST(req: NextRequest) {
 
   if (userQuery.rows.length === 0) {
     client.release();
+    log.error('User not found', { email });
     return new Response(JSON.stringify({ status: 'not-found' }), { status: 404, headers });
   }
 
@@ -59,6 +64,7 @@ export async function POST(req: NextRequest) {
 
   if (relationQuery.rows.length === 0) {
     client.release();
+    log.error('Invitation not found', { workspace, user: userId });
     return new Response(JSON.stringify({ status: 'not-found' }), { status: 404, headers });
   }
 
@@ -68,6 +74,8 @@ export async function POST(req: NextRequest) {
     RETURNING role`;
 
   client.release();
+
+  log.info('User joined', { user: userId, workspace });
 
   const sessionToken = await initiateSession({
     workspace,
@@ -80,7 +88,7 @@ export async function POST(req: NextRequest) {
     JSON.stringify({ status: 'success', sessionToken, role: relationQuery.rows[0]!.role }),
     { status: 200, headers },
   );
-}
+});
 
 export async function OPTIONS() {
   return new Response(null, { status: 204, headers: resolveCORSHeaders() });

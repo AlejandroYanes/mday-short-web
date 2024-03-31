@@ -1,9 +1,10 @@
-import type { NextRequest } from 'next/server';
+import { withAxiom, type AxiomRequest } from 'next-axiom';
 import { sql } from '@vercel/postgres';
 import { z } from 'zod';
 
 import type { NewShortLink, ShortLink } from 'models/links';
 import { resolveSession } from 'utils/auth';
+import { resolveCORSHeaders } from 'utils/api';
 
 const validator = z.object({
   id: z.number(),
@@ -13,23 +14,22 @@ const validator = z.object({
   expiresAt: z.string().nullish(),
 });
 
-export async function PUT(req: NextRequest) {
+export const PUT = withAxiom(async (req: AxiomRequest) => {
+  const headers = resolveCORSHeaders();
+  const log = req.log.with({ scope: 'links', endpoint: 'mndy/links/update', ip: req.ip, method: req.method });
+
   const session = await resolveSession(req);
 
   if (!session) {
-    return new Response(JSON.stringify({ status: 'unauthorized' }), { status: 401 });
+    log.error('Invalid session');
+    return new Response(JSON.stringify({ status: 'unauthorized' }), { status: 401, headers });
   }
 
   const body: NewShortLink = await req.json();
   const parse = validator.safeParse(body);
 
-  const headers = new Headers({
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-  });
-
   if (!parse.success) {
+    log.error('Invalid input', { user: session.user, workspace: session.workspace, error: parse.error.errors, body });
     return new Response(JSON.stringify(parse.error), { status: 400, headers });
   }
 
@@ -43,6 +43,9 @@ export async function PUT(req: NextRequest) {
 
   if (linkBySlug.rowCount > 0 && linkBySlug.rows[0]!.id !== parse.data.id) {
     client.release();
+
+    log.error('Short link already exists', { slug, user: session.user, workspace: session.workspace });
+
     return new Response(
       JSON.stringify({ success: false, field: 'slug', error: 'The short name already exists.' }),
       { status: 400, headers },
@@ -57,21 +60,27 @@ export async function PUT(req: NextRequest) {
 
   if (query.rowCount === 0) {
     client.release();
+
+    log.error('Link not found', { id: parse.data.id });
+
     return new Response(
       JSON.stringify({ success: false, field: 'not-found', error: 'The link could not be found.' }),
       { status: 404, headers },
     );
   }
 
-  return new Response(JSON.stringify(query.rows[0]), { status: 200, headers });
-}
+  client.release();
 
-export async function OPTIONS() {
-  const headers = new Headers({
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  log.info('Short link updated', {
+    user: session.user,
+    workspace: session.workspace,
+    id: parse.data.id,
+    link: query.rows[0]!.slug,
   });
 
-  return new Response(null, { status: 204, headers });
+  return new Response(JSON.stringify(query.rows[0]), { status: 200, headers });
+});
+
+export async function OPTIONS() {
+  return new Response(null, { status: 204, headers: resolveCORSHeaders() });
 }

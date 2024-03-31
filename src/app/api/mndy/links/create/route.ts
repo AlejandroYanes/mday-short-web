@@ -1,4 +1,4 @@
-import type { NextRequest } from 'next/server';
+import { withAxiom, type AxiomRequest } from 'next-axiom';
 import { sql } from '@vercel/postgres';
 import { z } from 'zod';
 
@@ -13,12 +13,14 @@ const validator = z.object({
   expiresAt: z.string().nullish(),
 });
 
-export async function POST(req: NextRequest) {
+export const POST = withAxiom(async (req: AxiomRequest) => {
   const headers = resolveCORSHeaders();
+  const log = req.log.with({ scope: 'links', endpoint: 'mndy/link/create', ip: req.ip, method: req.method });
 
   const session = await resolveSession(req);
 
   if (!session) {
+    log.error('Invalid session');
     return new Response(JSON.stringify({ status: 'unauthorized' }), { status: 401, headers });
   }
 
@@ -26,6 +28,7 @@ export async function POST(req: NextRequest) {
   const parse = validator.safeParse(body);
 
   if (!parse.success) {
+    log.error('Invalid input', { user: session.user, workspace: session.workspace, error: parse.error.errors, body });
     return new Response(JSON.stringify(parse.error), { status: 400, headers });
   }
 
@@ -39,6 +42,7 @@ export async function POST(req: NextRequest) {
 
   if (userInWorkspace.rowCount === 0) {
     client.release();
+    log.error('User not in workspace', { user: session.user, workspace: session.workspace });
     return new Response(JSON.stringify({ success: false, error: 'incorrect workspace.' }), { status: 400, headers });
   }
 
@@ -46,6 +50,7 @@ export async function POST(req: NextRequest) {
 
   if (linkBySlug.rowCount > 0) {
     client.release();
+    log.error('Short link already exists', { slug, user: session.user, workspace: session.workspace });
     return new Response(
       JSON.stringify({ success: false, field: 'slug', error: 'The short name already exists.' }),
       { status: 400, headers },
@@ -60,15 +65,11 @@ export async function POST(req: NextRequest) {
 
   client.release();
 
+  log.info('Short link created', { user: session.user, workspace: session.workspace, link: query.rows[0] });
+
   return new Response(JSON.stringify(query.rows[0]), { status: 201, headers });
-}
+});
 
 export async function OPTIONS() {
-  const headers = new Headers({
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-  });
-
-  return new Response(null, { status: 204, headers });
+  return new Response(null, { status: 204, headers: resolveCORSHeaders() });
 }

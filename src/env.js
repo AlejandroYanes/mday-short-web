@@ -34,6 +34,8 @@ export const env = createEnv({
    */
   client: {
     // NEXT_PUBLIC_CLIENTVAR: z.string(),
+    NEXT_PUBLIC_AXIOM_DATASET: z.string(),
+    NEXT_PUBLIC_AXIOM_TOKEN: z.string(),
   },
 
   /**
@@ -56,6 +58,8 @@ export const env = createEnv({
     PLATFORM_URL: process.env.PLATFORM_URL,
     PLATFORM_PASSWORD: process.env.PLATFORM_PASSWORD,
     // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
+    NEXT_PUBLIC_AXIOM_DATASET: process.env.NEXT_PUBLIC_AXIOM_DATASET,
+    NEXT_PUBLIC_AXIOM_TOKEN: process.env.NEXT_PUBLIC_AXIOM_TOKEN,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially
