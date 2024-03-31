@@ -19,7 +19,7 @@ export const DELETE = withAxiom(async (req: AxiomRequest, { params }: { params: 
   }
 
   if (!validator.safeParse(Number(params.id)).success) {
-    log.error('Invalid link ID', { id: params.id });
+    log.error('Invalid link ID', { id: params.id, user: session.user, workspace: session.workspace });
     return new Response(JSON.stringify({ error: 'Invalid link ID' }), { status: 400, headers });
   }
 
@@ -29,14 +29,14 @@ export const DELETE = withAxiom(async (req: AxiomRequest, { params }: { params: 
            RETURNING *;`;
 
   if (query.rowCount === 0) {
-    log.error('Link not found', { id: params.id });
+    log.error('Link not found', { id: params.id, user: session.user, workspace: session.workspace });
     return new Response(
       JSON.stringify({ success: false, field: 'not-found', error: 'The link could not be found.' }),
       { status: 404, headers },
     );
   }
 
-  log.info('Link deleted', { id: params.id });
+  log.info('Link deleted', { id: params.id, user: session.user, workspace: session.workspace });
   return new Response(JSON.stringify({ success: true }), { status: 200, headers });
 });
 
