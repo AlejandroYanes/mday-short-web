@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { cookies } from 'next/headers';
-import { notFound } from 'next/navigation';
 import { sql } from '@vercel/postgres';
 
 import type { ShortLink } from 'models/links';
