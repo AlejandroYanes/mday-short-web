@@ -10,7 +10,7 @@ export const config = {
   matcher: [
     // '/v(.*)',
     // eslint-disable-next-line max-len
-    '/((?!api|_next/static|_next/image|logo|illustrations|screenshots|favicon.ico|how-to-use|link|pricing|privacy-policy|signin|terms-of-service|links|users).*)',
+    '/((?!api|_next/static|_next/image|_vercel|logo|illustrations|screenshots|favicon.ico|how-to-use|link|pricing|privacy-policy|signin|terms-of-service|links|users).*)',
     // TODO: this is a list of Monday.com paths that can not be handled by this middleware
     //       this would allow for url masking but the form it's protected with CORS
     //       might be worth to add a UI options and let users toggle it on/off
