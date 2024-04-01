@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 
 import { resolveSessionFromCookies } from 'utils/auth';
+import Header from 'components/header';
 
 interface Props {
   children: any;
@@ -13,5 +14,12 @@ export default async function PrivateLayout(props: Props) {
     redirect('/signin');
   }
 
-  return props.children;
+  return (
+    <section>
+      <Header />
+      <main>
+        {props.children}
+      </main>
+    </section>
+  );
 }

@@ -35,5 +35,5 @@ export async function signin(formData: FormData) {
   });
 
   cookies().set(MONDAY_WEB_SESSION_COOKIE, sessionToken);
-  redirect('/dashboard');
+  redirect('/links');
 }
