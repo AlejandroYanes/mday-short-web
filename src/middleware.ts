@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { cookies } from 'next/headers';
+import { notFound } from 'next/navigation';
 import { sql } from '@vercel/postgres';
 
 import type { ShortLink } from 'models/links';
@@ -8,7 +9,9 @@ import { VISITOR_ACCESS_COOKIE } from 'utils/cookies';
 
 export const config = {
   matcher: [
-    '/v/:wslug/:slug*',
+    // '/v(.*)',
+    // eslint-disable-next-line max-len
+    '/((?!api|_next/static|_next/image|logo|illustrations|screenshots|favicon.ico|how-to-use|link|pricing|privacy-policy|signin|terms-of-service|dashboard).*)',
     // TODO: this is a list of Monday.com paths that can not be handled by this middleware
     //       this would allow for url masking but the form it's protected with CORS
     //       might be worth to add a UI options and let users toggle it on/off
@@ -58,13 +61,18 @@ export async function middleware(req: NextRequest) {
   //   return NextResponse.redirect(url);
   // }
 
-  const wslug = req.nextUrl.pathname.split('/')[2];
-  const slug = req.nextUrl.pathname.split('/')[3];
   const url = req.nextUrl.clone();
+
+  if (req.nextUrl.pathname === '/' || req.nextUrl.pathname === '/service.worker.js') {
+    return NextResponse.next();
+  }
+
+  const wslug = req.nextUrl.pathname.split('/')[1];
+  const slug = req.nextUrl.pathname.split('/')[2];
 
   if (!wslug || !slug) {
     url.pathname = '/link/not-found';
-    return NextResponse.redirect(url);
+    return NextResponse.rewrite(url);
   }
 
   const query = await sql`SELECT url, password, "expiresAt" from "Link" WHERE slug = ${slug} AND wslug = ${wslug};`;

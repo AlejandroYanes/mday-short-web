@@ -27,15 +27,27 @@ interface  Props {
   loading: boolean;
   trigger: ReactNode;
   onSubmit: (link: NewShortLink) => Promise<void>;
+  onClose?: () => void;
 }
 
 export default function LinkFormModal(props: Props) {
-  const { title, description, error, initialValue, trigger, loading, onSubmit } = props;
+  const { title, description, error, initialValue, trigger, loading, onSubmit, onClose } = props;
 
   const [showModal, setShowModal] = useState(false);
   const [date, setDate] = useState<Date | undefined>(initialValue?.expiresAt ? new Date(initialValue.expiresAt) : undefined);
 
   const formRef = useRef<HTMLFormElement>(null);
+
+  const handleClose = (isOpen: boolean) => {
+    if (!isOpen) {
+      setShowModal(false);
+      if (onClose) {
+        onClose();
+      }
+    } else {
+      setShowModal(true);
+    }
+  };
 
   const handleClick = async () => {
     const form = new FormData(formRef.current!);
@@ -55,7 +67,7 @@ export default function LinkFormModal(props: Props) {
   };
 
   return (
-    <Dialog open={showModal} onOpenChange={setShowModal}>
+    <Dialog open={showModal} onOpenChange={handleClose}>
       <DialogTrigger asChild>
         {trigger}
       </DialogTrigger>

@@ -28,7 +28,10 @@ export const linkRouter = createTRPCRouter({
 
       client.release();
 
-      return { results: links.rows.map((link) => ({ ...link, id: Number(link.id) })), count: countQuery.rowCount };
+      return {
+        results: links.rows.map((link) => ({ ...link, id: Number(link.id) })),
+        count: countQuery.rowCount,
+      };
     }),
 
   create: protectedProcedure
@@ -42,7 +45,9 @@ export const linkRouter = createTRPCRouter({
       const { url, slug, password, expiresAt } = input;
 
       const client = await sql.connect();
-      const query = await client.sql<ShortLink>`SELECT slug FROM "Link" WHERE slug = ${slug};`;
+      const query = await client.sql<ShortLink>`
+        SELECT slug FROM "Link"
+        WHERE wslug = ${session.wslug} AND slug = ${slug};`;
 
       if (query.rowCount) {
         throw new TRPCError({
@@ -75,7 +80,9 @@ export const linkRouter = createTRPCRouter({
 
       const client = await sql.connect();
 
-      const linkBySlug = await client.sql<ShortLink>`SELECT id, slug FROM "Link" WHERE slug = ${slug} AND wslug = ${session.wslug};`;
+      const linkBySlug = await client.sql<ShortLink>`
+        SELECT id, slug FROM "Link"
+        WHERE slug = ${slug} AND wslug = ${session.wslug};`;
 
       if (linkBySlug.rowCount > 0 && linkBySlug.rows[0]!.id !== id) {
         client.release();

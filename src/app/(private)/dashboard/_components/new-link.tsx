@@ -37,6 +37,7 @@ export default function NewLink(props: Props) {
       loading={isLoading}
       error={error}
       onSubmit={handleClick}
+      onClose={() => setError(null)}
       trigger={<Button variant="black">Add new link</Button>}
     />
   );
