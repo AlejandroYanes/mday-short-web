@@ -17,7 +17,7 @@ export const usersRouter = createTRPCRouter({
       const client = await sql.connect();
       const usersQuery = await client.sql<User & { workspace: string }>`
           SELECT U.id, U.name, U.email, U."createdAt", W.name AS "workspace"
-          FROM "User" U JOIN "UserInWorkspace" UIW ON U.id = UIW."userId" JOIN "Workspace" W ON UIW."workspaceId" = W.id
+          FROM "User" U LEFT JOIN "UserInWorkspace" UIW ON U.id = UIW."userId" LEFT JOIN "Workspace" W ON UIW."workspaceId" = W.mid
           ORDER BY "createdAt"
           OFFSET ${(page - 1) * pageSize}
           LIMIT ${pageSize};
