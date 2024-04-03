@@ -2,7 +2,7 @@ import { withAxiom, type AxiomRequest } from 'next-axiom';
 import { sql } from '@vercel/postgres';
 import { z } from 'zod';
 
-import type { NewShortLink, ShortLink } from 'models/links';
+import type { NewShortLink } from 'models/links';
 import { resolveSession } from 'utils/auth';
 import { resolveCORSHeaders } from 'utils/api';
 import { KEBAB_CASE_REGEX } from 'utils/strings';
