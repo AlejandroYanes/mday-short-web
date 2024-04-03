@@ -23,6 +23,7 @@ export default function EditLink(props: Props) {
     try {
       await updateLink({ ...data, id: link.id });
       onSuccess();
+      setError(null);
     } catch (e: any) {
       if (e.shape.data.code === 'BAD_REQUEST') {
         setError(e.shape.message);
@@ -38,6 +39,7 @@ export default function EditLink(props: Props) {
       loading={isLoading}
       error={error}
       onSubmit={handleClick}
+      onClose={() => setError(null)}
       trigger={
         <Button variant="ghost" size="sm">
           <IconEdit size={16} />

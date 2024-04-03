@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react';
-import type { TRPCError } from '@trpc/server';
 
 import { Button } from 'ui';
 import { api } from 'trpc/react';
@@ -22,6 +21,7 @@ export default function NewLink(props: Props) {
     try {
       await createLink(data);
       onSuccess();
+      setError(null);
     } catch (e: any) {
       if (e.shape.data.code === 'BAD_REQUEST') {
         setError(e.shape.message);

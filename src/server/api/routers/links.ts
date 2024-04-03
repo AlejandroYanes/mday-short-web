@@ -84,7 +84,7 @@ export const linkRouter = createTRPCRouter({
         SELECT id, slug FROM "Link"
         WHERE slug = ${slug} AND wslug = ${session.wslug};`;
 
-      if (linkBySlug.rowCount > 0 && linkBySlug.rows[0]!.id !== id) {
+      if (linkBySlug.rowCount > 0 && Number(linkBySlug.rows[0]!.id) !== id) {
         client.release();
         throw new TRPCError({
           code: 'BAD_REQUEST',
