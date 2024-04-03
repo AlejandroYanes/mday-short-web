@@ -83,10 +83,11 @@ export async function middleware(req: NextRequest) {
   }
 
   if (link.password) {
-    const access = cookies().get(VISITOR_ACCESS_COOKIE(slug))?.value;
+    const access = cookies().get(VISITOR_ACCESS_COOKIE(wslug, slug))?.value;
 
     if (access !== 'granted') {
       url.pathname = '/link/access';
+      url.searchParams.set('wslug', wslug);
       url.searchParams.set('slug', slug);
       return NextResponse.redirect(url);
     }

@@ -1,21 +1,35 @@
 import Image from 'next/image';
 import { redirect } from 'next/navigation';
+import { z } from 'zod';
 
 import { AppBanner, Input } from 'ui';
 import { validatePassword } from './action';
+import { KEBAB_CASE_REGEX } from 'utils/strings';
 
 interface Props {
   searchParams: {
+    wslug?: string;
     slug?: string;
     access?: string;
   };
 }
 
+const validator = z.object({
+  wslug: z.string().min(1).regex(KEBAB_CASE_REGEX),
+  slug: z.string().min(1).regex(KEBAB_CASE_REGEX),
+});
+
 export default function AccessCheckPage(props: Props) {
   const { searchParams } = props;
-  const { slug, access } = searchParams;
+  const { wslug, slug, access } = searchParams;
 
-  if (!slug) {
+  if (!wslug || !slug) {
+    redirect('/link/not-found');
+  }
+
+  const input = validator.safeParse(searchParams);
+
+  if (!input.success) {
     redirect('/link/not-found');
   }
 
@@ -41,6 +55,7 @@ export default function AccessCheckPage(props: Props) {
                 Please enter the password to access this link.
               </p>
               <div className="flex flex-col gap-3 w-full mt-4">
+                <input name="wslug" type="hidden" value={wslug}/>
                 <input name="slug" type="hidden" value={slug}/>
                 <Input name="password" type="password" placeholder="Password" className="w-full" />
                 {access === 'denied' ? <span>Error: this is not the correct password, please try again</span> : null}

@@ -33,7 +33,7 @@ export const POST = withAxiom(async (req: AxiomRequest) => {
   if (!input.success) {
     log.error('Invalid input', { body, error: input.error.errors });
     return new Response(
-      JSON.stringify({ status: 'invalid', error: input.error.errors }),
+      JSON.stringify({ status: 'invalid', error: 'some of the fields contain errors' }),
       { status: 400, headers },
     );
   }
