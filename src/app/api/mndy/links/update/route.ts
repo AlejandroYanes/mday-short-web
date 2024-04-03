@@ -38,8 +38,8 @@ export const PUT = withAxiom(async (req: AxiomRequest) => {
 
   const client = await sql.connect();
 
-  const linkBySlug = await client.sql<ShortLink>`
-    SELECT slug FROM "Link" WHERE slug = ${slug} AND wslug = ${session.wslug};
+  const linkBySlug = await client.sql<{ id: string }>`
+    SELECT id FROM "Link" WHERE slug = ${slug} AND wslug = ${session.wslug};
    `;
 
   if (linkBySlug.rowCount > 0 && Number(linkBySlug.rows[0]!.id) !== parse.data.id) {
