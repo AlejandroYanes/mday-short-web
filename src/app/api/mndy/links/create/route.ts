@@ -10,8 +10,8 @@ import { KEBAB_CASE_REGEX } from 'utils/strings';
 const validator = z.object({
   url: z.string().min(1, { message: 'The url can not be empty' }).url({ message: 'The url is invalid' }),
   slug: z.string().min(1, { message: 'The short name can not be empty' }).regex(KEBAB_CASE_REGEX, { message: 'The short name is invalid' }),
-  password: z.string().optional(),
-  expiresAt: z.string().optional(),
+  password: z.string().nullish(),
+  expiresAt: z.string().nullish(),
 });
 
 export const POST = withAxiom(async (req: AxiomRequest) => {
