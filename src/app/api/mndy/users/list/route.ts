@@ -3,7 +3,7 @@ import { sql } from '@vercel/postgres';
 
 import type { ExtendedUser } from 'models/user';
 import { WorkspaceRole } from 'models/user-in-workspace';
-import { resolveSession } from 'utils/auth';
+import { decryptMessage, resolveSession } from 'utils/auth';
 import { resolveCORSHeaders } from 'utils/api';
 
 export async function GET(req: NextRequest) {
@@ -20,8 +20,20 @@ export async function GET(req: NextRequest) {
     FROM "User" U INNER JOIN "UserInWorkspace" UW ON U.id = UW."userId" INNER JOIN "Workspace" W on UW."workspaceId" = W.mid
     WHERE W.slug = ${session.wslug} ORDER BY U."createdAt"
   `;
+
+  const transformedUsers = [];
+
+  for (const user of query.rows) {
+    transformedUsers.push({
+      ...user,
+      id: Number(user.id),
+      name: await decryptMessage(user.name),
+      email: await decryptMessage(user.email),
+    });
+  }
+
   return new Response(
-    JSON.stringify({ results: query.rows.map((user) => ({ ...user, id: Number(user.id) } )) }),
+    JSON.stringify({ results: transformedUsers }),
     { status: 200, headers },
   );
 }

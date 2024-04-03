@@ -2,6 +2,7 @@ import { sql } from '@vercel/postgres';
 import { z } from 'zod';
 
 import type { User } from 'models/user';
+import { decryptMessage, encryptMessage } from 'utils/auth';
 import { createTRPCRouter, protectedProcedure } from 'server/api/trpc';
 
 export const usersRouter = createTRPCRouter({
@@ -26,8 +27,19 @@ export const usersRouter = createTRPCRouter({
 
       client.release();
 
+      const transformedUsers = [];
+
+      for (const user of usersQuery.rows) {
+        transformedUsers.push({
+          ...user,
+          id: Number(user.id),
+          name: await decryptMessage(user.name),
+          email: await decryptMessage(user.email),
+        });
+      }
+
       return {
-        results: usersQuery.rows.map((user) => ({ ...user, id: Number(user.id) })),
+        results: transformedUsers,
         count: countQuery.rowCount,
       };
     }),

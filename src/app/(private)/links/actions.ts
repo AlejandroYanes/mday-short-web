@@ -1,5 +1,5 @@
 'use server'
-import { encrypt, resolveSessionFromCookies } from 'utils/auth';
+import { signJWT, resolveSessionFromCookies } from 'utils/auth';
 
 const fakeToken = {
   dat: {
@@ -24,5 +24,5 @@ export async function resolveToken() {
     return null;
   }
 
-  return encrypt(fakeToken);
+  return signJWT(fakeToken);
 }

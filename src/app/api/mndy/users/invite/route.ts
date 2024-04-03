@@ -4,7 +4,7 @@ import { z } from 'zod';
 
 import { WorkspaceRole, WorkspaceStatus } from 'models/user-in-workspace';
 import { resolveCORSHeaders } from 'utils/api';
-import { resolveSession } from 'utils/auth';
+import { encryptMessage, resolveSession } from 'utils/auth';
 
 const validator = z.object({
   name: z.string()
@@ -43,14 +43,14 @@ export const POST = withAxiom(async (req: AxiomRequest) => {
 
   const client = await sql.connect();
 
-  const userQuery = await client.sql<{ id: number }>`SELECT id FROM "User" WHERE email = ${email}`;
+  const userQuery = await client.sql<{ id: number }>`SELECT id FROM "User" WHERE email = ${await encryptMessage(email)}`;
 
   if (userQuery.rows[0]) {
     userId = Number(userQuery.rows[0].id);
   } else {
     const userInsertQuery = await client.sql<{ id: number }>`
         INSERT INTO "User" (name, email)
-        VALUES (${name}, ${email})
+        VALUES (${await encryptMessage(name)}, ${await encryptMessage(email)})
         RETURNING id`;
     userId = userInsertQuery.rows[0]!.id;
   }

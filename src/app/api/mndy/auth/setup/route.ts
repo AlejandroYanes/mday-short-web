@@ -5,7 +5,7 @@ import { z } from 'zod';
 import type { Workspace } from 'models/workspace';
 import { type UserInWorkspace, WorkspaceRole, WorkspaceStatus } from 'models/user-in-workspace';
 import { KEBAB_CASE_REGEX } from 'utils/strings';
-import { decrypt, initiateSession } from 'utils/auth';
+import { openJWT, initiateSession, encryptMessage } from 'utils/auth';
 import { resolveCORSHeaders } from 'utils/api';
 
 const validator = z.object({
@@ -35,7 +35,7 @@ export const POST = withAxiom(async(req: AxiomRequest) => {
 
   const { workspace, user, token } = parsedBody.data;
 
-  const session = await decrypt(token);
+  const session = await openJWT(token);
 
   if (!session) {
     log.error('Invalid token');
@@ -70,12 +70,14 @@ export const POST = withAxiom(async(req: AxiomRequest) => {
     return new Response(JSON.stringify({ status: 'wrong-workspace' }), { status: 400, headers });
   }
 
-  const userQuery = await client.sql<{ id: string }>`SELECT id FROM "User" WHERE email = ${user.email}`;
+  const userQuery = await client.sql<{ id: string }>`SELECT id FROM "User" WHERE email = ${await encryptMessage(user.email)}`;
   let userId;
 
   if (userQuery.rows.length === 0) {
     const newUserQuery = await client.sql<{ id: number }>`
-        INSERT INTO "User" (name, email) VALUES (${user.name}, ${user.email}) RETURNING id`;
+        INSERT INTO "User" (name, email)
+        VALUES (${await encryptMessage(user.name)}, ${await encryptMessage(user.email)})
+        RETURNING id`;
     userId = Number(newUserQuery.rows[0]!.id);
   } else {
     userId = Number(userQuery.rows[0]!.id);

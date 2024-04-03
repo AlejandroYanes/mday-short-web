@@ -41,7 +41,7 @@ export const PUT = withAxiom(async (req: AxiomRequest) => {
     SELECT slug FROM "Link" WHERE slug = ${slug} AND wslug = ${session.wslug};
    `;
 
-  if (linkBySlug.rowCount > 0 && linkBySlug.rows[0]!.id !== parse.data.id) {
+  if (linkBySlug.rowCount > 0 && Number(linkBySlug.rows[0]!.id) !== parse.data.id) {
     client.release();
 
     log.error('Short link already exists', { slug, user: session.user, workspace: session.workspace });

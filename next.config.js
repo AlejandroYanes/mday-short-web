@@ -6,6 +6,6 @@ import { withAxiom } from 'next-axiom';
 await import('./src/env.js');
 
 /** @type {import("next").NextConfig} */
-const config = withAxiom({});
+const config = process.env.NODE_ENV === 'development' ? {} : withAxiom({});
 
 export default config;

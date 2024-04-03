@@ -4,7 +4,7 @@ import { z } from 'zod';
 
 import { WorkspaceStatus } from 'models/user-in-workspace';
 import { resolveCORSHeaders } from 'utils/api';
-import { decrypt, initiateSession } from 'utils/auth';
+import { openJWT, initiateSession, encryptMessage } from 'utils/auth';
 
 const validator = z.object({
   workspace: z.number(),
@@ -29,7 +29,7 @@ export const POST = withAxiom(async (req: AxiomRequest) => {
 
   const { workspace, email, token } = input.data;
 
-  const session = await decrypt(token);
+  const session = await openJWT(token);
 
   if (!session) {
     log.error('Invalid session');
@@ -48,7 +48,7 @@ export const POST = withAxiom(async (req: AxiomRequest) => {
   }
 
   const userQuery = await client.sql<{ id: number }>`
-    SELECT id FROM "User" WHERE email = ${email}`;
+    SELECT id FROM "User" WHERE email = ${await encryptMessage(email)}`;
 
   if (userQuery.rows.length === 0) {
     client.release();

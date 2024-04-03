@@ -3,7 +3,7 @@ import { sql } from '@vercel/postgres';
 import { z } from 'zod';
 
 import { WorkspaceRole, WorkspaceStatus } from 'models/user-in-workspace';
-import { decrypt, initiateSession } from 'utils/auth';
+import { openJWT, initiateSession, encryptMessage } from 'utils/auth';
 import { resolveCORSHeaders } from 'utils/api';
 
 const validator = z.object({
@@ -30,7 +30,7 @@ export const  POST = withAxiom(async (req: AxiomRequest) => {
 
   const { workspace, name, email, token } = input.data;
 
-  const session = await decrypt(token);
+  const session = await openJWT(token);
 
   if (!session) {
     log.error('Invalid token');
@@ -56,7 +56,7 @@ export const  POST = withAxiom(async (req: AxiomRequest) => {
   }
 
   const userQuery = await client.sql<{ id: number }>`
-    SELECT id FROM "User" WHERE email = ${email}`;
+    SELECT id FROM "User" WHERE email = ${await encryptMessage(email)}`;
 
   if (userQuery.rows.length === 0) {
     // workspace exists, but user does not,
