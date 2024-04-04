@@ -10,10 +10,12 @@ export default function HowToUsePage() {
         <AppBanner/>
         <section className="flex flex-col gap-6">
           <div className="px-4 md:px-6">
-            <div className="flex flex-col items-center justify-center space-y-4 text-center">
+            <div className="flex flex-col space-y-4">
               <h2 className="text-4xl text-center">How to Use</h2>
               <p className="text-gray-500 dark:text-gray-300 text-xl/relaxed">
-                Welcome to Short Links for monday.com!
+                Short Links {`it's`} a workspace app that simplifies communication by letting you transform lengthy URLs into custom, shareable links directly within your monday.com workspace.
+                < br />
+                < br />
                 This short guide will help you get started with the tool and show you
                 how to create and manage short links.
               </p>
