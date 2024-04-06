@@ -5,24 +5,24 @@ import { sql } from '@vercel/postgres';
 
 import { env } from 'env';
 import { MONDAY_WEB_SESSION_COOKIE } from 'utils/cookies';
-import { initiateSession } from 'utils/auth';
+import { encryptMessage, initiateSession } from 'utils/auth';
 
 export async function signin(formData: FormData) {
   const password = formData.get('password');
   const isPasswordValid = password === env.PLATFORM_PASSWORD;
 
   if (!isPasswordValid) {
-    return { success: false, message: 'Invalid password' };
+    redirect('/signin?error=invalid');
   }
 
   const query = await sql<{ userId: number; workspaceId: number; wslug: string; role: string }>`
     SELECT U.id as "userId", W.id as "workspaceId", W.slug as wslug, UIW.role as role
     FROM "User" U INNER JOIN "UserInWorkspace" UIW on U.id = UIW."userId" INNER JOIN "Workspace" W on UIW."workspaceId" = W.id
-    WHERE U.name = 'devland';
+    WHERE U.name = ${await encryptMessage('devland')};
   `;
 
   if (!query.rowCount) {
-    return { success: false, message: 'User not found' };
+    redirect('/signin?error=not-found');
   }
 
   const { userId, workspaceId, wslug, role } = query.rows[0]!;
@@ -33,6 +33,8 @@ export async function signin(formData: FormData) {
     wslug,
     role,
   });
+
+  console.log('sessionToken:', sessionToken);
 
   cookies().set(MONDAY_WEB_SESSION_COOKIE, sessionToken);
   redirect('/links');

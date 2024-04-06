@@ -4,21 +4,21 @@ import { AppBanner } from 'ui';
 
 export default function LinkNotFoundPage() {
   return (
-    <section className="flex min-h-screen flex-col">
-      <main className="container flex flex-col items-center gap-12 px-4 py-16">
+    <section className="min-h-screen flex flex-col justify-center items-center">
+      <main className="container flex flex-col items-center px-4 py-4">
         <AppBanner />
         <section className="flex flex-col items-center justify-center">
-          <div className="rounded-full w-[380px] h-[400px] bg-white">
+          <div className="rounded-full w-[300px] h-[340px] bg-white">
             <Image
-              width={380}
-              height={400}
+              width={300}
+              height={340}
               alt="welcoming illustration"
               src="/illustrations/question-mark.svg"
-              className="w-[380px] h-[400px]"
+              className="w-[300px] h-[340px]"
               priority
             />
           </div>
-          <div className="mt-10">
+          <div className="mt-4">
             <h2 className="text-3xl text-center mb-1">Link not found</h2>
             <p className="text-base">
               The link you are trying to access does not exist. Please check the URL and try again.

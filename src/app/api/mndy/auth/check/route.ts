@@ -63,7 +63,7 @@ export const  POST = withAxiom(async (req: AxiomRequest) => {
     // so we need to create a new user and create join req for the workspace
     const newUserQuery = await client.sql<{ id: number }>`
         INSERT INTO "User" (name, email)
-        VALUES (${name}, ${email}) RETURNING id`;
+        VALUES (${await encryptMessage(name)}, ${await encryptMessage(email)}) RETURNING id`;
 
     const newUser = Number(newUserQuery.rows[0]!.id);
 
