@@ -21,11 +21,18 @@ import {
   TableHeader,
   TableRow
 } from 'ui';
+import type { MondaySession } from 'models/session';
 import NewLink from './new-link';
 import EditLink from './edit-link';
 import DeleteLink from './delete-link';
 
-export default function LinksTable() {
+interface Props {
+  session: MondaySession;
+}
+
+export default function LinksTable(props: Props) {
+  const { session } = props;
+
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const [query, setQuery] = useState('');
@@ -105,7 +112,7 @@ export default function LinksTable() {
               <TableCell className="text-center">{link.expiresAt ? formatDate(link.expiresAt) : '-'}</TableCell>
 
               <TableCell>
-                <RenderIf condition={filter === 'dland'}>
+                <RenderIf condition={filter === session.wslug}>
                   <div className="flex items-center justify-center gap-2">
                     <EditLink link={link} onSuccess={refetch}/>
                     <DeleteLink link={link} onSuccess={refetch}/>
