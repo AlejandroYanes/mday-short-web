@@ -6,15 +6,32 @@ import Link from 'next/link';
 import { api } from 'trpc/react';
 import { formatDate } from 'utils/dates';
 import { useDebounce } from 'utils/hooks/use-debounce';
-import { Input, Pagination, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from 'ui';
+import {
+  Input,
+  Pagination,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from 'ui';
 import NewLink from './new-link';
 import EditLink from './edit-link';
 import DeleteLink from './delete-link';
+
+type Filter = 'mine' | 'all';
 
 export default function LinksTable() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const [query, setQuery] = useState('');
+  const [filter, setFilter] = useState<Filter>('all');
 
   const { debounceCall } = useDebounce(250);
 
@@ -27,6 +44,11 @@ export default function LinksTable() {
     debounceCall(() => setQuery(value));
   }
 
+  const handleFilterChange = (value: string) => {
+    setFilter(value as Filter);
+    setPage(1);
+  };
+
   return (
     <>
       <div className="flex justify-between items-center mb-4">
@@ -35,7 +57,18 @@ export default function LinksTable() {
           className="w-[280px]"
           onChange={(e) => handleSearch(e.target.value)}
         />
-        <NewLink onSuccess={refetch} />
+        <div className="flex flex-row ml-auto gap-4">
+          <Select onValueChange={handleFilterChange}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue className="capitalize">Filter: {filter}</SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="mine">Mine</SelectItem>
+            </SelectContent>
+          </Select>
+          <NewLink onSuccess={refetch} />
+        </div>
       </div>
       <Table>
         <TableHeader>
@@ -55,11 +88,11 @@ export default function LinksTable() {
               </TableCell>
 
               <TableCell>
-                <Link href={`/${link.wslug}/${link.slug}`} target="_blank">
+                <a href={`/${link.wslug}/${link.slug}`} target="_blank" rel="noreferrer">
                   <span className="hover:text-emerald-500 underline">
                     {link.slug}
                   </span>
-                </Link>
+                </a>
               </TableCell>
 
               <TableCell className="text-center">{link.password || '-'}</TableCell>
