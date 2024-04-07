@@ -29,6 +29,7 @@ export const linkRouter = createTRPCRouter({
       client.release();
 
       return {
+        wslug: session.wslug,
         results: links.rows.map((link) => ({ ...link, id: Number(link.id) })),
         count: countQuery.rowCount,
       };

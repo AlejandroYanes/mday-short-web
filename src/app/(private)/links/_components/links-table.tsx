@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 
 import { api } from 'trpc/react';
 import { formatDate } from 'utils/dates';
@@ -35,7 +34,7 @@ export default function LinksTable() {
 
   const { debounceCall } = useDebounce(250);
 
-  const { data: { results, count } = { results: [], count: 0 }, refetch } = api.link.list.useQuery(
+  const { data: { results, count, wslug } = { results: [], count: 0 }, refetch } = api.link.list.useQuery(
     { query, page, pageSize },
     { keepPreviousData: true },
   );
@@ -57,6 +56,7 @@ export default function LinksTable() {
           className="w-[280px]"
           onChange={(e) => handleSearch(e.target.value)}
         />
+        <span className="ml-10">{wslug}</span>
         <div className="flex flex-row ml-auto gap-4">
           <Select onValueChange={handleFilterChange}>
             <SelectTrigger className="w-[180px]">
