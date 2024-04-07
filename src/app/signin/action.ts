@@ -18,7 +18,7 @@ export async function signin(formData: FormData) {
   const query = await sql<{ userId: number; workspaceId: number; wslug: string; role: string }>`
     SELECT U.id as "userId", W.id as "workspaceId", W.slug as wslug, UIW.role as role
     FROM "User" U INNER JOIN "UserInWorkspace" UIW on U.id = UIW."userId" INNER JOIN "Workspace" W on UIW."workspaceId" = W.mid
-    WHERE U.name = ${await encryptMessage('devland')};
+    WHERE U.email = ${await encryptMessage('alejandro@mndy.link')};
   `;
 
   if (!query.rowCount) {

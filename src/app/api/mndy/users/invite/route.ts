@@ -1,10 +1,11 @@
-import { withAxiom, type AxiomRequest } from 'next-axiom';
+import { type AxiomRequest, withAxiom } from 'next-axiom';
 import { sql } from '@vercel/postgres';
 import { z } from 'zod';
 
 import { WorkspaceRole, WorkspaceStatus } from 'models/user-in-workspace';
 import { resolveCORSHeaders } from 'utils/api';
 import { encryptMessage, resolveSession } from 'utils/auth';
+import { sendInviteEmail } from 'utils/resend';
 
 const validator = z.object({
   name: z.string()
@@ -52,7 +53,7 @@ export const POST = withAxiom(async (req: AxiomRequest) => {
         INSERT INTO "User" (name, email)
         VALUES (${await encryptMessage(name)}, ${await encryptMessage(email)})
         RETURNING id`;
-    userId = userInsertQuery.rows[0]!.id;
+    userId = Number(userInsertQuery.rows[0]!.id);
   }
 
   const relationQuery = await client.sql<{ userId: string }>`
@@ -75,7 +76,17 @@ export const POST = withAxiom(async (req: AxiomRequest) => {
     VALUES (${session.workspace}, ${userId}, ${role}, ${WorkspaceStatus.INVITED})
   `;
 
+  const workspaceQuery = await client.sql<{ name: string }>`
+    SELECT name FROM "Workspace" WHERE mid = ${session.workspace}`;
+
   client.release();
+
+  const workspaceName = workspaceQuery.rows[0]!.name;
+  const emailResponse = await sendInviteEmail({ to: email, name, workspaceName });
+
+  if (!emailResponse.success) {
+    log.error('Failed to send invite email', { target: email, user: session.user, workspace: session.workspace });
+  }
 
   log.info('User invited', { target: userId, user: session.user, workspace: session.workspace });
 
