@@ -48,7 +48,10 @@ export default function LinksTable(props: Props) {
   const { data: workspaces = [] } = api.workspaces.list.useQuery();
 
   const handleSearch = (value: string) => {
-    debounceCall(() => setQuery(value));
+    debounceCall(() => {
+      setQuery(value);
+      setPage(1);
+    });
   }
 
   const handleFilterChange = (value: string) => {

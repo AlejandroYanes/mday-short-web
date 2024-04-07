@@ -3,33 +3,55 @@ import { useState } from 'react';
 
 import { api } from 'trpc/react';
 import { formatDate } from 'utils/dates';
-import { useDebounce } from 'utils/hooks/use-debounce';
-import { Input, Pagination, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from 'ui';
+import {
+  Pagination,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from 'ui';
 
 export default function UsersTable() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
-  const [query, setQuery] = useState('');
-
-  const { debounceCall } = useDebounce(250);
+  const [filter, setFilter] = useState<string>('all');
 
   const { data: { results, count } = { results: [], count: 0 } } = api.users.list.useQuery(
-    { query, page, pageSize },
+    { page, pageSize, wslug: filter },
     { keepPreviousData: true },
   );
 
-  const handleSearch = (value: string) => {
-    debounceCall(() => setQuery(value));
-  }
+  const { data: workspaces = [] } = api.workspaces.list.useQuery();
+
+  const handleFilterChange = (value: string) => {
+    setFilter(value);
+    setPage(1);
+  };
 
   return (
     <>
-      <div className="flex items-center mb-4">
-        <Input
-          placeholder="Search"
-          className="w-[280px]"
-          onChange={(e) => handleSearch(e.target.value)}
-        />
+      <div className="flex items-center mb-4 gap-4">
+        <Select onValueChange={handleFilterChange}>
+          <SelectTrigger className="w-[260px]">
+            <SelectValue>Workspace: {filter}</SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All</SelectItem>
+            <SelectItem value="dland">Devland</SelectItem>
+            {workspaces.map((workspace) => (
+              <SelectItem key={workspace.id} value={workspace.slug}>
+                {workspace.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
       <Table>
         <TableHeader>
