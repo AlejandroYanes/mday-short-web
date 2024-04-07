@@ -8,6 +8,7 @@ import { useDebounce } from 'utils/hooks/use-debounce';
 import {
   Input,
   Pagination,
+  RenderIf,
   Select,
   SelectContent,
   SelectItem,
@@ -104,10 +105,12 @@ export default function LinksTable() {
               <TableCell className="text-center">{link.expiresAt ? formatDate(link.expiresAt) : '-'}</TableCell>
 
               <TableCell>
-                <div className="flex items-center justify-center gap-2">
-                  <EditLink link={link} onSuccess={refetch} />
-                  <DeleteLink link={link} onSuccess={refetch} />
-                </div>
+                <RenderIf condition={filter === 'dland'}>
+                  <div className="flex items-center justify-center gap-2">
+                    <EditLink link={link} onSuccess={refetch}/>
+                    <DeleteLink link={link} onSuccess={refetch}/>
+                  </div>
+                </RenderIf>
               </TableCell>
             </TableRow>
           ))}
