@@ -38,6 +38,7 @@
     "@radix-ui/react-tabs": "1.0.4",
     "@radix-ui/react-toast": "1.1.4",
     "@radix-ui/react-tooltip": "1.0.6",
+    "@sejohnson/tql": "2.0.0",
     "@t3-oss/env-nextjs": "0.9.2",
     "@tabler/icons-react": "2.22.0",
     "@tanstack/react-query": "4.36.1",

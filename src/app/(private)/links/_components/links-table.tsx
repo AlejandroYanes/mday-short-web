@@ -24,51 +24,55 @@ import NewLink from './new-link';
 import EditLink from './edit-link';
 import DeleteLink from './delete-link';
 
-type Filter = 'mine' | 'all';
-
 export default function LinksTable() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const [query, setQuery] = useState('');
-  const [filter, setFilter] = useState<Filter>('all');
+  const [filter, setFilter] = useState<string>('all');
 
   const { debounceCall } = useDebounce(250);
 
-  const { data: { results, count, wslug } = { results: [], count: 0 }, refetch } = api.link.list.useQuery(
-    { query, page, pageSize },
+  const { data: { results, count } = { results: [], count: 0 }, refetch } = api.link.list.useQuery(
+    { page, pageSize, wslug: filter, search: query },
     { keepPreviousData: true },
   );
+
+  const { data: workspaces = [] } = api.workspaces.list.useQuery();
 
   const handleSearch = (value: string) => {
     debounceCall(() => setQuery(value));
   }
 
   const handleFilterChange = (value: string) => {
-    setFilter(value as Filter);
+    setFilter(value);
     setPage(1);
   };
 
   return (
     <>
       <div className="flex justify-between items-center mb-4">
-        <Input
-          placeholder="Search"
-          className="w-[280px]"
-          onChange={(e) => handleSearch(e.target.value)}
-        />
-        <span className="ml-10">{wslug}</span>
-        <div className="flex flex-row ml-auto gap-4">
+        <div className="flex flex-row gap-4">
           <Select onValueChange={handleFilterChange}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue className="capitalize">Filter: {filter}</SelectValue>
+            <SelectTrigger className="w-[260px]">
+              <SelectValue>Workspace: {filter}</SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All</SelectItem>
-              <SelectItem value="mine">Mine</SelectItem>
+              <SelectItem value="dland">Devland</SelectItem>
+              {workspaces.map((workspace) => (
+                <SelectItem key={workspace.id} value={workspace.slug}>
+                  {workspace.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
-          <NewLink onSuccess={refetch} />
+          <Input
+            placeholder="Search"
+            className="w-[280px]"
+            onChange={(e) => handleSearch(e.target.value)}
+          />
         </div>
+        <NewLink onSuccess={refetch} />
       </div>
       <Table>
         <TableHeader>

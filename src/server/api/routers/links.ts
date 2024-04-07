@@ -3,33 +3,48 @@ import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 
 import type { ShortLink } from 'models/links';
-import { createTRPCRouter, protectedProcedure } from 'server/api/trpc';
 import { KEBAB_CASE_REGEX } from 'utils/strings';
+import { tql } from 'utils/tql';
+import { createTRPCRouter, protectedProcedure } from 'server/api/trpc';
 
 export const linkRouter = createTRPCRouter({
   list: protectedProcedure
     .input(z.object({
       page: z.number().min(1),
       pageSize: z.number(),
-      query: z.string().nullish(),
+      search: z.string().nullish(),
+      wslug: z.string(),
     }))
-    .query(async ({ ctx: { session }, input }) => {
-      const { page, pageSize } = input;
+    .query(async ({ input }) => {
+      const { page, pageSize, search, wslug } = input;
 
       const client = await sql.connect();
-      const links = await client.sql<ShortLink>`
-          SELECT id, url, slug, wslug, password, "expiresAt"
-          FROM "Link" WHERE wslug = ${session.wslug}
-          ORDER BY "createdAt"
-          OFFSET ${(page - 1) * pageSize}
-          LIMIT ${pageSize};
-      `;
-      const countQuery = await client.sql<{ id: number }>`SELECT id FROM "Link";`;
+
+      const filterQuery = wslug === 'all' ? tql.fragment`` : tql.fragment`wslug = ${wslug}`;
+
+      const searchQuery = search ? tql.fragment`slug ILIKE ${`%${search}%`}` : tql.fragment``;
+
+      const andQuery = wslug !== 'all' && search ? tql.fragment`AND` : tql.fragment``;
+
+      const hasFilters = wslug !== 'all' || !!search;
+
+      const whereClause = hasFilters ? tql.fragment`WHERE ${filterQuery} ${andQuery} ${searchQuery}` : tql.fragment``;
+
+      const [listQ, listP] = tql.query`
+        SELECT id, url, slug, wslug, password, "expiresAt"
+        FROM "Link" ${whereClause}
+        ORDER BY "createdAt"
+        OFFSET ${(page - 1) * pageSize}
+        LIMIT ${pageSize};`;
+
+      const links = await client.query<ShortLink>(listQ, listP);
+
+      const [whereQ, whereP] = tql.query`SELECT id FROM "Link" ${whereClause}`;
+      const countQuery = await client.query<{ id: number }>(whereQ, whereP);
 
       client.release();
 
       return {
-        wslug: session.wslug,
         results: links.rows.map((link) => ({ ...link, id: Number(link.id) })),
         count: countQuery.rowCount,
       };
