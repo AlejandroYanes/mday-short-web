@@ -17,6 +17,7 @@ const fakeToken = {
   },
   exp: 1,
 };
+
 export async function resolveToken() {
   const session = await resolveSessionFromCookies();
 

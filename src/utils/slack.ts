@@ -28,3 +28,16 @@ export function notifyOfDeletedAccount(data: Payload) {
     { text: `A user just removed the app:\n*${data.name}*\n*${data.email}*` }
   );
 }
+
+interface EmailPayload {
+  email: string;
+}
+
+export function notifyOfFailedEmail(data: EmailPayload) {
+  return sendNotification(
+    env.SLACK_EMAILS_CHANNEL,
+    {
+      text: `An email for this user has failed to send.\n*${data.email}*`,
+    },
+  );
+}
