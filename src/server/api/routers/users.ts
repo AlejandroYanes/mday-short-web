@@ -2,7 +2,7 @@ import { sql } from '@vercel/postgres';
 import { z } from 'zod';
 
 import type { User } from 'models/user';
-import { decryptMessage, encryptMessage } from 'utils/auth';
+import { decryptMessage } from 'utils/auth';
 import { createTRPCRouter, protectedProcedure } from 'server/api/trpc';
 
 export const usersRouter = createTRPCRouter({
@@ -17,9 +17,12 @@ export const usersRouter = createTRPCRouter({
 
       const client = await sql.connect();
       const usersQuery = await client.sql<User & { workspace: string }>`
-          SELECT U.id, U.name, U.email, U."createdAt", W.name AS "workspace"
-          FROM "User" U LEFT JOIN "UserInWorkspace" UIW ON U.id = UIW."userId" LEFT JOIN "Workspace" W ON UIW."workspaceId" = W.mid
-          ORDER BY "createdAt"
+          SELECT u.id, u.name, u.email, u."createdAt", STRING_AGG(w.name, ', ') AS workspace
+          FROM "User" u
+          LEFT JOIN "UserInWorkspace" uw ON u.id = uw."userId"
+          LEFT JOIN "Workspace" w ON uw."workspaceId" = w.mid
+          GROUP BY u.id, u.name, u.email, u."createdAt"
+          ORDER BY u."createdAt"
           OFFSET ${(page - 1) * pageSize}
           LIMIT ${pageSize};
       `;
