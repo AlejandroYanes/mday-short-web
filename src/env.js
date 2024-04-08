@@ -25,6 +25,9 @@ export const env = createEnv({
     SLACK_EMAILS_CHANNEL: z.string().url(),
     // Resend
     RESEND_API_KEY: z.string(),
+    // Lemon Squeezy
+    LEMON_SQUEEZY_API_KEY: z.string(),
+    LEMON_SQUEEZY_STORE: z.string(),
     // Platform
     PLATFORM_URL: z.string().url(),
     PLATFORM_PASSWORD: z.string(),
@@ -54,14 +57,23 @@ export const env = createEnv({
     POSTGRES_HOST: process.env.POSTGRES_HOST,
     POSTGRES_PASSWORD: process.env.POSTGRES_PASSWORD,
     POSTGRES_DATABASE: process.env.POSTGRES_DATABASE,
+
     NODE_ENV: process.env.NODE_ENV,
+
     MONDAY_CLIENT_ID: process.env.MONDAY_CLIENT_ID,
     MONDAY_CLIENT_SECRET: process.env.MONDAY_CLIENT_SECRET,
+
     SLACK_USERS_CHANNEL: process.env.SLACK_USERS_CHANNEL,
     SLACK_EMAILS_CHANNEL: process.env.SLACK_EMAILS_CHANNEL,
+
     RESEND_API_KEY: process.env.RESEND_API_KEY,
+
+    LEMON_SQUEEZY_API_KEY: process.env.LEMON_SQUEEZY_API_KEY,
+    LEMON_SQUEEZY_STORE: process.env.LEMON_SQUEEZY_STORE,
+
     PLATFORM_URL: process.env.PLATFORM_URL,
     PLATFORM_PASSWORD: process.env.PLATFORM_PASSWORD,
+
     NEXT_PUBLIC_AXIOM_DATASET: process.env.NEXT_PUBLIC_AXIOM_DATASET,
     NEXT_PUBLIC_AXIOM_TOKEN: process.env.NEXT_PUBLIC_AXIOM_TOKEN,
   },
