@@ -1,4 +1,14 @@
-import { Button } from 'ui';
+'use client'
+
+import { useState } from 'react';
+
+import {
+  Button,
+  Tabs,
+  TabsList,
+  TabsTrigger,
+} from 'ui';
+import { startCheckout } from './actions';
 
 const Container = (props: { children: any }) => (
   <div data-el="plan-card" className="flex flex-col items-stretch p-6 gap-6 w-1/2">
@@ -22,25 +32,49 @@ const Price = (props: { value: number; cycle: string; highlight?: boolean }) => 
 );
 
 export default function PricingPage() {
+  const [billingCycle, setBillingCycle] = useState<'month' | 'year'>('month');
+
+  const handleBuyPlan = async (plan: 'basic' | 'premium') => {
+    const response = await startCheckout(plan, billingCycle);
+    console.log(response);
+  }
+
   return (
     <section className="flex flex-col gap-10 w-[800px] pt-10 mx-auto">
+      <Tabs
+        value={billingCycle}
+        onValueChange={setBillingCycle as any}
+        className="mx-auto rounded-md border border-neutral-200 dark:border-slate-800"
+      >
+        <TabsList>
+          <TabsTrigger value="month">Monthly</TabsTrigger>
+          <TabsTrigger value="year">Yearly</TabsTrigger>
+        </TabsList>
+      </Tabs>
       <div className="border rounded-lg flex items-stretch">
         <Container>
           <Header>Base Plan</Header>
-          <Price value={5} cycle="month" />
+          <Price value={billingCycle === 'month' ? 5 : 50} cycle={billingCycle} />
           <p className="mb-auto">You will be able to create as many links as you want to.</p>
-          <Button variant="outline" size="sm" className="mt-4">Buy Plan</Button>
+          <Button variant="outline" size="sm" className="mt-4" onClick={() => handleBuyPlan('basic')}>
+            Buy Plan
+          </Button>
         </Container>
         <div className="w-[1px] bg-border my-6" />
         <Container>
           <Header highlight>Premium Plan</Header>
-          <Price value={10} cycle="month" highlight />
+          <Price value={billingCycle === 'month' ? 10 : 100} cycle={billingCycle} highlight />
           <p>
             Sames as the Base Plan.
             <br />
             Additionally, you will be able to use custom domains, QR codes and all the features we have.
+            <br/>
+            <br/>
+            We are offering discounts for the first 100 users.
           </p>
-          <Button size="sm" className="mt-4">Buy Plan</Button>
+          <Button size="sm" className="mt-4" onClick={() => handleBuyPlan('premium')}>
+            Buy Plan
+          </Button>
         </Container>
       </div>
     </section>
