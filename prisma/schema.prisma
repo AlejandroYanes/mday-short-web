@@ -13,34 +13,6 @@ datasource db {
     relationMode = "prisma"
 }
 
-model Link {
-    id              BigInt          @id @default(autoincrement())
-    url             String
-    slug            String
-    wslug           String
-    password        String?
-    expiresAt       DateTime?
-    createdAt       DateTime        @default(now())
-    postedBy        User?           @relation(fields: [postedById], references: [id])
-    postedById      BigInt?
-
-    @@unique([wslug, slug])
-    @@index([wslug, slug], name: "wslug_slug_index")
-}
-
-model Analytic {
-    id              BigInt      @id @default(autoincrement())
-    experiment      String
-    variant         String      @default("default")
-    event           String
-    visitorId       String?
-    country         String?
-    city            String?
-    region          String?
-    device          String?
-    createdAt       DateTime    @default(now())
-}
-
 model User {
     id          BigInt      @id @default(autoincrement())
     name        String
@@ -67,3 +39,48 @@ model UserInWorkspace {
 
     @@id([userId, workspaceId])
 }
+
+model Subscription {
+  id              BigInt      @id
+  workspaceId     BigInt
+  customer        Int
+  plan            Int
+  variant         Int
+  price           Int
+  status          String
+  cardBrand       String
+  cardDigits      String
+  renewsAt        DateTime
+  endsAt         DateTime?
+  expiresAt       DateTime?
+  createdAt       DateTime    @default(now())
+}
+
+model Link {
+  id              BigInt          @id @default(autoincrement())
+  url             String
+  slug            String
+  wslug           String
+  password        String?
+  expiresAt       DateTime?
+  createdAt       DateTime        @default(now())
+  postedBy        User?           @relation(fields: [postedById], references: [id])
+  postedById      BigInt?
+
+  @@unique([wslug, slug])
+  @@index([wslug, slug], name: "wslug_slug_index")
+}
+
+model Analytic {
+  id              BigInt      @id @default(autoincrement())
+  experiment      String
+  variant         String      @default("default")
+  event           String
+  visitorId       String?
+  country         String?
+  city            String?
+  region          String?
+  device          String?
+  createdAt       DateTime    @default(now())
+}
+

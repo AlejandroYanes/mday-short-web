@@ -3,17 +3,25 @@ import { redirect } from 'next/navigation';
 
 import { env } from 'env';
 
-const basicMonthlyPlan = env.LEMON_SQUEEZY_BASIC_PLAN_MONTHLY_VARIANT;
-const basicYearlyPlan = env.LEMON_SQUEEZY_BASIC_PLAN_YEARLY_VARIANT;
+const basicMonthlyCheckout = env.LEMON_SQUEEZY_BASIC_PLAN_MONTHLY_CHECKOUT;
+const basicYearlyCheckout = env.LEMON_SQUEEZY_BASIC_PLAN_YEARLY_CHECKOUT;
 
-const premiumMonthlyPlan = env.LEMON_SQUEEZY_PREMIUM_PLAN_MONTHLY_VARIANT;
-const premiumYearlyPlan = env.LEMON_SQUEEZY_PREMIUM_PLAN_YEARLY_VARIANT;
+const premiumMonthlyCheckout = env.LEMON_SQUEEZY_PREMIUM_PLAN_MONTHLY_CHECKOUT;
+const premiumYearlyCheckout = env.LEMON_SQUEEZY_PREMIUM_PLAN_YEARLY_CHECKOUT;
 
-export async function startCheckout(plan: 'basic' | 'premium', cycle: 'month' | 'year') {
+interface CheckoutParams {
+  plan: 'basic' | 'premium';
+  cycle: 'month' | 'year';
+  name?: string;
+  email?: string;
+}
+
+export async function startCheckout(params: CheckoutParams) {
+  const { plan, cycle, name = 'Luke Skywalker', email = 'hello@example.com' } = params;
   let url;
 
   if (plan === 'premium') {
-    url = cycle === 'month' ? new URL(premiumMonthlyPlan) : new URL(premiumYearlyPlan);
+    url = cycle === 'month' ? new URL(premiumMonthlyCheckout) : new URL(premiumYearlyCheckout);
 
     if (cycle === 'month') {
       url.searchParams.append('checkout[discount_code]', env.LEMON_SQUEEZY_MONTHLY_DISCOUNT_CODE);
@@ -22,11 +30,11 @@ export async function startCheckout(plan: 'basic' | 'premium', cycle: 'month' | 
     }
 
   } else {
-    url = cycle === 'month' ? new URL(basicMonthlyPlan) : new URL(basicYearlyPlan);
+    url = cycle === 'month' ? new URL(basicMonthlyCheckout) : new URL(basicYearlyCheckout);
   }
 
-  url.searchParams.append('checkout[email]', 'hello@example.com');
-  url.searchParams.append('checkout[name]', 'Luke Skywalker');
+  url.searchParams.append('checkout[email]', email);
+  url.searchParams.append('checkout[name]', name);
 
   redirect(url.toString());
 }
