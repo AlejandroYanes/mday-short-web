@@ -35,6 +35,8 @@ export function webhookHasData(obj: unknown): obj is {
         card_brand: string;
         card_last_four: string;
       };
+      variant_id: number;
+      status: string;
       renews_at: string;
       ends_at: string | null;
     };
@@ -49,14 +51,14 @@ export function webhookHasData(obj: unknown): obj is {
   );
 }
 
-export function resolvePlan(variantId: string) {
+export function resolvePlan(variantId: number) {
   const basicPlanVariants = [
-    env.LEMON_SQUEEZY_BASIC_PLAN_MONTHLY_VARIANT,
-    env.LEMON_SQUEEZY_BASIC_PLAN_YEARLY_VARIANT,
+    Number(env.LEMON_SQUEEZY_BASIC_PLAN_MONTHLY_VARIANT),
+    Number(env.LEMON_SQUEEZY_BASIC_PLAN_YEARLY_VARIANT),
   ];
   const premiumPlanVariants = [
-    (env.LEMON_SQUEEZY_PREMIUM_PLAN_MONTHLY_VARIANT),
-    env.LEMON_SQUEEZY_PREMIUM_PLAN_YEARLY_VARIANT,
+    Number(env.LEMON_SQUEEZY_PREMIUM_PLAN_MONTHLY_VARIANT),
+    Number(env.LEMON_SQUEEZY_PREMIUM_PLAN_YEARLY_VARIANT),
   ];
 
   if (basicPlanVariants.includes(variantId)) {

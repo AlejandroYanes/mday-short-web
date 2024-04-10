@@ -44,7 +44,15 @@ export const POST = withAxiom(async (request: AxiomRequest) => {
     switch (event.meta.event_name) {
       case 'subscription_created': {
         // TODO: add a check for existing subscription before inserting
-        const variantId = attributes.variant_id as string;
+
+        const prevSubscription = await sql`SELECT id FROM "Subscription" WHERE id = ${subscriptionId}`;
+
+        if (prevSubscription.rows.length > 0) {
+          log.error('Subscription already exists', { workspace: '1' });
+          break;
+        }
+
+        const variantId = attributes.variant_id;
         const priceId = attributes.first_subscription_item.price_id;
         const priceData = await getPrice(priceId);
 
@@ -79,35 +87,44 @@ export const POST = withAxiom(async (request: AxiomRequest) => {
         await notifyOfNewSubscription({ workspace: '1', plan });
         log.info('Subscription created', { workspace: '1' });
       } break;
+
+      case 'subscription_updated': {
+        const status = attributes.status as string;
+        const renewsAt = attributes.renews_at;
+        const endsAt = attributes.ends_at;
+        const cardBrand = attributes.first_subscription_item.card_brand;
+        const cardDigits = attributes.first_subscription_item.card_last_four;
+
+        await sql`
+          UPDATE "Subscription"
+          SET status = ${status}, "renewsAt"=${renewsAt}, "endsAt"=${endsAt}, "cardBrand"=${cardBrand}, "cardDigits"=${cardDigits}
+          WHERE id = ${subscriptionId}`;
+      } break;
+
       case 'subscription_cancelled': {
         const endsAt = attributes.ends_at!;
-        await sql`UPDATE "Subscription" SET status = 'cancelled', "endsAt"=${endsAt} WHERE id = ${subscriptionId}`;
         await notifyOfSubscriptionCancellation({ workspace: '1', endsAt });
         log.info('Subscription cancelled', { workspace: '1' });
       } break;
+
       case 'subscription_resumed': {
-        await sql`UPDATE "Subscription" SET status = 'active' WHERE id = ${subscriptionId}`;
         await notifyOfResumedSubscription({ workspace: '1' });
         log.info('Subscription resumed', { workspace: '1' });
       } break;
+
       case 'subscription_expired': {
-        await sql`UPDATE "Subscription" SET status = 'expired' WHERE id = ${subscriptionId}`;
         await notifyOfSubscriptionExpiration({ workspace: '1' });
         log.info('Subscription expired', { workspace: '1' });
       } break;
+
       case 'subscription_paused': {
-        await sql`UPDATE "Subscription" SET status = 'paused' WHERE id = ${subscriptionId}`;
         await notifyOfSubscriptionPaused({ workspace: '1' });
         log.info('Subscription paused', { workspace: '1' });
       } break;
+
       case 'subscription_unpaused': {
-        await sql`UPDATE "Subscription" SET status = 'active' WHERE id = ${subscriptionId}`;
         await notifyOfSubscriptionUnpaused({ workspace: '1' });
         log.info('Subscription unpaused', { workspace: '1' });
-      } break;
-      case 'subscription_payment_success': {
-        const renewsAt = attributes.renews_at;
-        await sql`UPDATE "Subscription" SET "renewsAt"=${renewsAt} WHERE id = ${subscriptionId}`;
       } break;
     }
 
