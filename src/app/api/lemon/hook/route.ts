@@ -21,7 +21,7 @@ const secret = env.LEMON_SQUEEZY_SUBSCRIPTION_WEBHOOK_SECRET;
 
 lemonSqueezySetup({
   apiKey: env.LEMON_SQUEEZY_API_KEY,
-})
+});
 
 export const POST = withAxiom(async (request: AxiomRequest) => {
   const log = request.log.with({ scope: 'lemon-squeezy', endpoint: '/lemon/hook' });
@@ -45,7 +45,7 @@ export const POST = withAxiom(async (request: AxiomRequest) => {
   // Type guard to check if the object has a 'meta' property.
   if (webhookHasMeta(event) && webhookHasData(event)) {
     const attributes = event.data.attributes;
-    const subscriptionId = attributes.first_subscription_item.subscription_id;
+    const subscriptionId = attributes.first_subscription_item!.subscription_id;
     const customerEmail = attributes.user_email;
 
     const client = await sql.connect();
@@ -79,7 +79,7 @@ export const POST = withAxiom(async (request: AxiomRequest) => {
         }
 
         const variantId = attributes.variant_id;
-        const priceId = attributes.first_subscription_item.price_id;
+        const priceId = attributes.first_subscription_item!.price_id;
         const priceData = await getPrice(priceId);
 
         if (priceData.error) {

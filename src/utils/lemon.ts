@@ -1,3 +1,5 @@
+import type { Subscription } from '@lemonsqueezy/lemonsqueezy.js';
+
 import { type Plan, planToVariantMap } from 'models/lemon';
 
 function isObject(value: unknown): value is Record<string, unknown> {
@@ -18,28 +20,7 @@ export function webhookHasMeta(obj: unknown): obj is {
 
 }
 
-export function webhookHasData(obj: unknown): obj is {
-  data: {
-    attributes: Record<string, unknown> & {
-      first_subscription_item: {
-        id: number;
-        subscription_id: number;
-        price_id: number;
-      };
-      customer_id: number;
-      product_id: number;
-      variant_id: number;
-      user_name: string;
-      user_email: string;
-      status: string;
-      card_brand: string;
-      card_last_four: string;
-      renews_at: string;
-      ends_at: string | null;
-    };
-    id: string;
-  };
-} {
+export function webhookHasData(obj: unknown): obj is { data: Subscription['data'] } {
   return (
     isObject(obj) &&
     'data' in obj &&

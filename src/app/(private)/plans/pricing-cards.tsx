@@ -7,7 +7,7 @@ import {
   TabsList,
   TabsTrigger,
 } from 'ui';
-import { startCheckout } from './actions';
+import { openCustomerPortal, startCheckout } from './actions';
 
 const Container = (props: { children: any }) => (
   <div data-el="plan-card" className="flex flex-col items-stretch p-6 gap-6 w-1/2">
@@ -75,6 +75,7 @@ export default function PricingCards() {
           </Button>
         </Container>
       </div>
+      <Button className="mx-auto w-[240px]" onClick={() => openCustomerPortal()}>Customer Portal</Button>
     </>
   );
 }

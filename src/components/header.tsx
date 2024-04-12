@@ -40,6 +40,13 @@ export default function Header() {
         >
           Users
         </Link>
+        <Link
+          href="/plans"
+          data-active={pathname === '/plans'}
+          className="text-muted-foreground data-[active=true]:text-foreground transition-colors hover:text-foreground"
+        >
+          Plans
+        </Link>
       </nav>
       <div className="flex items-center gap-4 ml-auto">
         <DropdownMenu>
