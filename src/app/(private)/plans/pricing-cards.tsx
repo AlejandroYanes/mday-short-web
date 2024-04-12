@@ -52,7 +52,7 @@ export default function PricingCards() {
       <div className="border rounded-lg flex items-stretch">
         <Container>
           <Header>Base Plan</Header>
-          <Price value={billingCycle === 'month' ? 5 : 50} cycle={billingCycle} />
+          <Price value={billingCycle === 'month' ? 8 : 80} cycle={billingCycle} />
           <p className="mb-auto">You will be able to create as many links as you want to.</p>
           <Button variant="outline" size="sm" className="mt-4" onClick={() => handleBuyPlan('basic')}>
             Buy Plan
@@ -61,7 +61,7 @@ export default function PricingCards() {
         <div className="w-[1px] bg-border my-6" />
         <Container>
           <Header highlight>Premium Plan</Header>
-          <Price value={billingCycle === 'month' ? 10 : 100} cycle={billingCycle} highlight />
+          <Price value={billingCycle === 'month' ? 12 : 120} cycle={billingCycle} highlight />
           <p>
             Sames as the Base Plan.
             <br />

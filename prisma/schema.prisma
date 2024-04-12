@@ -44,7 +44,6 @@ model Subscription {
   id              BigInt      @id
   workspaceId     BigInt
   customer        Int
-  plan            Int
   variant         Int
   price           Int
   status          String

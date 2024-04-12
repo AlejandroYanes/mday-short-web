@@ -17,7 +17,7 @@ interface CheckoutParams {
 }
 
 export async function startCheckout(params: CheckoutParams) {
-  const { plan, cycle, name = 'Luke Skywalker', email = 'hello@example.com' } = params;
+  const { plan, cycle, name = 'Alejandro Yanes', email = 'alejandro@mndy.link' } = params;
   let url;
 
   if (plan === 'premium') {

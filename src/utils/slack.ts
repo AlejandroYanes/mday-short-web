@@ -1,4 +1,5 @@
 import { env } from 'env';
+import { formatDate } from './dates';
 
 function sendNotification(channel: string, body: any) {
   return fetch(channel, {
@@ -48,13 +49,14 @@ interface SubscriptionPayload {
 
 interface NewSetupPayload extends SubscriptionPayload {
   plan: string;
+  price: number;
 }
 
 export function notifyOfNewSubscription(data: NewSetupPayload) {
   return sendNotification(
     env.SLACK_SUBSCRIPTIONS_CHANNEL,
     {
-      text: `A new subscription was created:\n*Workspace: ${data.workspace} - Plan: ${data.plan}*\n`,
+      text: `A new subscription was created:\n*Workspace: ${data.workspace}*\n*Plan: ${data.plan} (${data.price / 100})*\n`,
     },
   );
 }
@@ -94,7 +96,7 @@ export function notifyOfSubscriptionCancellation(data: SoftCancellationPayload) 
   return sendNotification(
     env.SLACK_SUBSCRIPTIONS_CHANNEL,
     {
-      text: `The subscription for this Workspace was set to end:\n*${data.workspace} - ${data.endsAt}*\n`,
+      text: `The subscription for this Workspace was set to end:\n*${data.workspace} - ${formatDate(data.endsAt)}*\n`,
     },
   );
 }
