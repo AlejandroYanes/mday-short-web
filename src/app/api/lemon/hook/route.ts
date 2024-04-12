@@ -66,14 +66,14 @@ export const POST = withAxiom(async (request: AxiomRequest) => {
     const workspaceId = Number(workspaceQuery.rows[0]!.mid);
     const workspaceName = workspaceQuery.rows[0]!.name;
 
-    console.log('----------event-name: ', event.meta.event_name);
+    log.with({ workspace: workspaceName, event: event.meta.event_name });
 
     switch (event.meta.event_name) {
       case 'subscription_created': {
         const prevSubscription = await sql`SELECT id FROM "Subscription" WHERE id = ${subscriptionId}`;
 
         if (prevSubscription.rows.length > 0) {
-          log.error('Subscription already exists', { email: customerEmail, workspace: workspaceName });
+          log.error('Subscription already exists', { email: customerEmail });
           client.release();
           break;
         }
@@ -111,7 +111,7 @@ export const POST = withAxiom(async (request: AxiomRequest) => {
             VALUES (${subscriptionId}, ${customer}, ${variantId}, ${price}, ${status}, ${workspaceId}, ${cardBrand}, ${cardDigits}, ${renewsAt})`;
 
         await notifyOfNewSubscription({ workspace: workspaceName, plan: resolvePlanName(variantId), price });
-        log.info('Subscription created', { workspace: workspaceName });
+        log.info('Subscription created');
       } break;
 
       case 'subscription_updated': {
@@ -125,32 +125,33 @@ export const POST = withAxiom(async (request: AxiomRequest) => {
           UPDATE "Subscription"
           SET status = ${status}, "renewsAt"=${renewsAt}, "endsAt"=${endsAt}, "cardBrand"=${cardBrand}, "cardDigits"=${cardDigits}
           WHERE id = ${subscriptionId}`;
+        log.info('Subscription updated', { status, renewsAt, endsAt });
       } break;
 
       case 'subscription_cancelled': {
         const endsAt = attributes.ends_at!;
         await notifyOfSubscriptionCancellation({ workspace: workspaceName, endsAt });
-        log.info('Subscription cancelled', { workspace: workspaceName });
+        log.info('Subscription cancelled');
       } break;
 
       case 'subscription_resumed': {
         await notifyOfResumedSubscription({ workspace: workspaceName });
-        log.info('Subscription resumed', { workspace: workspaceName });
+        log.info('Subscription resumed');
       } break;
 
       case 'subscription_expired': {
         await notifyOfSubscriptionExpiration({ workspace: workspaceName });
-        log.info('Subscription expired', { workspace: workspaceName });
+        log.info('Subscription expired');
       } break;
 
       case 'subscription_paused': {
         await notifyOfSubscriptionPaused({ workspace: workspaceName });
-        log.info('Subscription paused', { workspace: workspaceName });
+        log.info('Subscription paused');
       } break;
 
       case 'subscription_unpaused': {
         await notifyOfSubscriptionUnpaused({ workspace: workspaceName });
-        log.info('Subscription unpaused', { workspace: workspaceName });
+        log.info('Subscription unpaused');
       } break;
     }
 
