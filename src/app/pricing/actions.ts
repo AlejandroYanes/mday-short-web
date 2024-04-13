@@ -1,7 +1,5 @@
 'use server'
 import { redirect } from 'next/navigation';
-import { sql } from '@vercel/postgres';
-import { getSubscription, lemonSqueezySetup } from '@lemonsqueezy/lemonsqueezy.js';
 
 import { env } from 'env';
 
@@ -10,10 +8,6 @@ const basicYearlyCheckout = env.LEMON_SQUEEZY_BASIC_PLAN_YEARLY_CHECKOUT;
 
 const premiumMonthlyCheckout = env.LEMON_SQUEEZY_PREMIUM_PLAN_MONTHLY_CHECKOUT;
 const premiumYearlyCheckout = env.LEMON_SQUEEZY_PREMIUM_PLAN_YEARLY_CHECKOUT;
-
-lemonSqueezySetup({
-  apiKey: env.LEMON_SQUEEZY_API_KEY,
-});
 
 interface CheckoutParams {
   plan: 'basic' | 'premium';
@@ -44,24 +38,4 @@ export async function startCheckout(params: CheckoutParams) {
   url.searchParams.append('checkout[name]', name);
 
   redirect(url.toString());
-}
-
-export async function openCustomerPortal() {
-  const workspaceId = 1;
-  const subscriptionQuery = await sql`SELECT id FROM "Subscription" WHERE "workspaceId" = ${workspaceId}`;
-
-  if (subscriptionQuery.rows.length === 0) {
-    return { status: 404, error: 'Subscription not found' };
-  }
-
-  const subscriptionId = subscriptionQuery.rows[0]!.id;
-  const subscriptionResponse = await getSubscription(subscriptionId);
-
-  if (subscriptionResponse.error || !subscriptionResponse.data) {
-    return { status: 400, error: subscriptionResponse.error };
-  }
-
-  const subscription = subscriptionResponse.data.data;
-
-  redirect(subscription.attributes.urls.customer_portal);
 }
