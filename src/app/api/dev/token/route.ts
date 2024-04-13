@@ -1,5 +1,6 @@
 import type { NextRequest } from 'next/server';
-import { signJWT } from '../../../../utils/auth';
+
+import { signJWT } from 'utils/auth';
 
 const fakeToken = {
   dat: {

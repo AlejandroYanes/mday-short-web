@@ -65,7 +65,12 @@ const config = {
     }],
     "@typescript-eslint/consistent-type-imports": "warn",
     "@typescript-eslint/no-non-null-assertion": "off",
-    "@typescript-eslint/no-unused-vars": ["warn", { "varsIgnorePattern": "^_" }],
+    "@typescript-eslint/no-unused-vars": ["warn", {
+      "varsIgnorePattern": "^_",
+      "argsIgnorePattern": "^_",
+      "caughtErrorsIgnorePattern": "^_",
+      "destructuredArrayIgnorePattern": "^_",
+    }],
     "@typescript-eslint/no-explicit-any": "off",
     "@typescript-eslint/explicit-function-return-type": "off",
     "@typescript-eslint/explicit-module-boundary-types": "off",
