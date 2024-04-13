@@ -11,15 +11,20 @@ const basicYearlyCheckout = env.LEMON_SQUEEZY_BASIC_PLAN_YEARLY_CHECKOUT;
 const premiumMonthlyCheckout = env.LEMON_SQUEEZY_PREMIUM_PLAN_MONTHLY_CHECKOUT;
 const premiumYearlyCheckout = env.LEMON_SQUEEZY_PREMIUM_PLAN_YEARLY_CHECKOUT;
 
+lemonSqueezySetup({
+  apiKey: env.LEMON_SQUEEZY_API_KEY,
+});
+
 interface CheckoutParams {
   plan: 'basic' | 'premium';
   cycle: 'month' | 'year';
-  name?: string;
-  email?: string;
+  name: string;
+  email: string;
 }
 
 export async function startCheckout(params: CheckoutParams) {
-  const { plan, cycle, name = 'Alejandro Yanes', email = 'alejandro@mndy.link' } = params;
+  const { plan, cycle, name, email } = params;
+
   let url;
 
   if (plan === 'premium') {
@@ -40,10 +45,6 @@ export async function startCheckout(params: CheckoutParams) {
 
   redirect(url.toString());
 }
-
-lemonSqueezySetup({
-  apiKey: env.LEMON_SQUEEZY_API_KEY,
-});
 
 export async function openCustomerPortal() {
   const workspaceId = 1;

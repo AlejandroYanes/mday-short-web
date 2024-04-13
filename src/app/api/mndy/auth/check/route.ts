@@ -58,6 +58,11 @@ export const  POST = withAxiom(async (req: AxiomRequest) => {
       return new Response(JSON.stringify({ status: 'not-found' }), { status: 200, headers });
     }
 
+    const subscriptionQuery = await client.sql<{ id: number }>`
+    SELECT id FROM "Subscription" WHERE "workspaceId" = ${workspace} AND status = 'active'`;
+
+    const hasSubscription = subscriptionQuery.rows.length > 0;
+
     const userQuery = await client.sql<{ id: number; name: string }>`
     SELECT id, name FROM "User" WHERE email = ${await encryptMessage(email)}`;
 
@@ -83,15 +88,21 @@ export const  POST = withAxiom(async (req: AxiomRequest) => {
       client.release();
 
       log.info('User created', { user: newUserId, workspace });
-      return new Response(JSON.stringify({ status: 'pending' }), { status: 200, headers });
+
+      // the status changes if there is a subscription
+      return new Response(
+        JSON.stringify({ status: hasSubscription ? 'pending' : 'needs-billing' }),
+        { status: 200, headers },
+      );
     }
 
     const user = userQuery.rows[0]!;
     const userId = Number(user.id);
+
     const relationQuery = await client.sql<{ role: string; status: string }>`
-    SELECT role, status FROM "UserInWorkspace"
-    WHERE "workspaceId" = ${workspace} AND "userId" = ${userId}
-  `;
+      SELECT role, status FROM "UserInWorkspace"
+      WHERE "workspaceId" = ${workspace} AND "userId" = ${userId}
+    `;
 
     if (relationQuery.rows.length === 0) {
       // user exists, but is not in the workspace, so a join request is created
@@ -106,10 +117,22 @@ export const  POST = withAxiom(async (req: AxiomRequest) => {
 
       client.release();
       log.info('User added to workspace', { user, workspace });
-      return new Response(JSON.stringify({ status: 'pending' }), { status: 200, headers });
+
+      // the status changes if there is a subscription
+      return new Response(
+        JSON.stringify({ status: hasSubscription ? 'pending' : 'needs-billing' }),
+        { status: 200, headers },
+      );
     }
 
     client.release();
+
+    if (!hasSubscription) {
+      return new Response(
+        JSON.stringify({ status: 'needs-billing' }),
+        { status: 200, headers },
+      );
+    }
 
     const relation = relationQuery.rows[0]!;
 

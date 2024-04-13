@@ -34,11 +34,11 @@ export async function decryptMessage(encrypted: string) {
   }
 }
 
-export async function signJWT(payload: any) {
+export async function signJWT(payload: any, expires: string = '7 days from now') {
   return await new SignJWT(payload)
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
-    .setExpirationTime('7 days from now')
+    .setExpirationTime(expires)
     .sign(key);
 }
 

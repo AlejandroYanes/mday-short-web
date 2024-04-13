@@ -20,7 +20,7 @@ const outerVariants = cva(
 );
 
 const innerVariants = cva(
-  'box-border block absolute border-solid border-t-emerald-500',
+  'box-border block absolute border-solid border-t-pink-500',
   {
     variants: {
       size: {

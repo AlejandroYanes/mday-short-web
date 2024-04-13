@@ -1,24 +1,38 @@
-import { AppBanner, Button } from 'ui';
+/* eslint-disable max-len */
+import { AppBanner, MondayInstallButton } from 'ui';
+import { openJWT } from 'utils/auth';
+import PricingCards from './pricing-cards';
 
-export default function PricingPage() {
-  return (
-    <section className="flex min-h-screen flex-col">
-      <main className="container flex flex-col items-center justify-center gap-12 px-4 py-16 h-screen">
+interface Props {
+  searchParams: {
+    token?: string;
+  };
+}
+
+export default async function PricingPage(props: Props) {
+  const { searchParams: { token } } = props;
+
+  const data = !!token ? await openJWT(token) : null;
+
+  if (!data) {
+    return (
+      <section className="flex flex-col gap-10 w-[800px] pt-10 mx-auto">
         <AppBanner/>
-        <section className="flex flex-col items-center gap-6 max-w-[700px]">
-          <h2 className="text-3xl">Pricing</h2>
-          <p className="text-center">
-            We are currently in beta and all features are free. We will be introducing paid plans soon.
-            <br/>
-            Please let us know if you have any feedback or feature requests.
-          </p>
-          <a href="mailto:contact@mndy.link">
-            <Button variant="outline-ghost">
-              Contact Us
-            </Button>
-          </a>
-        </section>
-      </main>
+        <PricingCards name="a" email="a@a.com"/>
+        <p className="text-base text-center">
+          If you want to start using the this tool, first install the App on your monday.com account.
+        </p>
+        <MondayInstallButton className="mx-auto" />
+      </section>
+    );
+  }
+
+  const { name, email } = data;
+
+  return (
+    <section className="flex flex-col gap-10 w-[800px] pt-10 mx-auto">
+      <AppBanner/>
+      <PricingCards name={name} email={email} active/>
     </section>
   );
-};
+}

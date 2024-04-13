@@ -56,7 +56,7 @@ export function notifyOfNewSubscription(data: NewSetupPayload) {
   return sendNotification(
     env.SLACK_SUBSCRIPTIONS_CHANNEL,
     {
-      text: `A new subscription was created:\n*Workspace: ${data.workspace}*\n*Plan: ${data.plan} (${data.price / 100})*\n`,
+      text: `A new subscription was created:\n*Workspace: ${data.workspace}*\n*Plan: ${data.plan} - £${data.price / 100}*\n`,
     },
   );
 }
