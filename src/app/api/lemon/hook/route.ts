@@ -76,7 +76,6 @@ export const POST = withAxiom(async (request: AxiomRequest) => {
 
           if (prevSubscription.rows.length > 0) {
             log.error('Subscription already exists', { email: customerEmail });
-            client.release();
             break;
           }
 

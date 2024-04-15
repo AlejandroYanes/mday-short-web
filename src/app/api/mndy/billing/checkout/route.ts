@@ -70,7 +70,7 @@ export const POST = withAxiom(async (req: AxiomRequest) => {
   return new Response(JSON.stringify({ url: checkoutURL }), { status: 200, headers });
 });
 
-export function OPTIONS() {
+export async function OPTIONS() {
   return new Response(null, { status: 204, headers: resolveCORSHeaders() });
 }
 

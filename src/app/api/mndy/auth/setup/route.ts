@@ -112,5 +112,5 @@ export const POST = withAxiom(async(req: AxiomRequest) => {
 });
 
 export async function OPTIONS() {
-  return new Response(null, { status: 200, headers:resolveCORSHeaders() });
+  return new Response(null, { status: 204, headers:resolveCORSHeaders() });
 }
