@@ -1,13 +1,7 @@
-'use client'
+'use client';
 import { useState } from 'react';
 
-import {
-  Button, Loader, RenderIf,
-  Tabs,
-  TabsList,
-  TabsTrigger,
-} from 'ui';
-import { startCheckout } from './actions';
+import { Tabs, TabsList, TabsTrigger, } from 'ui';
 
 const Container = (props: { children: any }) => (
   <div data-el="plan-card" className="flex flex-col items-stretch p-6 gap-6 w-1/2">
@@ -30,22 +24,8 @@ const Price = (props: { value: number; cycle: string; highlight?: boolean }) => 
   </p>
 );
 
-interface Props {
-  active?: boolean;
-  name: string;
-  email: string;
-}
-
-export default function PricingCards(props: Props) {
-  const { name, email, active = false } = props;
-
+export default function PricingCards() {
   const [billingCycle, setBillingCycle] = useState<'month' | 'year'>('month');
-  const [isProcessingPlan, setIsProcessingPlan] = useState<string | null>(null);
-
-  const handleBuyPlan = async (plan: 'basic' | 'premium') => {
-    setIsProcessingPlan(plan);
-    await startCheckout({ plan, cycle: billingCycle, email, name });
-  }
 
   return (
     <>
@@ -67,20 +47,6 @@ export default function PricingCards(props: Props) {
             <li>Create as many links as you want to.</li>
             <li>Access to Analytics</li>
           </ul>
-          <RenderIf condition={active}>
-            <Button
-              variant="outline"
-              size="sm"
-              className="mt-4"
-              disabled={!!isProcessingPlan}
-              onClick={() => handleBuyPlan('basic')}
-            >
-              <RenderIf condition={isProcessingPlan === 'basic'}>
-                <Loader size="xs" color="white" className="mr-2" />
-              </RenderIf>
-              Buy Plan
-            </Button>
-          </RenderIf>
         </Container>
         <div className="w-[1px] bg-border my-6" />
         <Container>
@@ -92,21 +58,8 @@ export default function PricingCards(props: Props) {
             <li>Generate QR codes to share.</li>
           </ul>
           <p>
-            {active ? 'We are offering discounts for the first 100 users.' : null}
+            We are offering discounts for the first 100 users.
           </p>
-          <RenderIf condition={active}>
-            <Button
-              size="sm"
-              className="mt-4"
-              disabled={!!isProcessingPlan}
-              onClick={() => handleBuyPlan('premium')}
-            >
-              <RenderIf condition={isProcessingPlan === 'premium'}>
-                <Loader size="xs" color="white" className="mr-2" />
-              </RenderIf>
-              Buy Plan
-            </Button>
-          </RenderIf>
         </Container>
       </div>
     </>

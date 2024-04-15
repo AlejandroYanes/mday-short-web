@@ -1,4 +1,4 @@
-import type { Subscription } from '@lemonsqueezy/lemonsqueezy.js';
+import type { Subscription, SubscriptionInvoice } from '@lemonsqueezy/lemonsqueezy.js';
 
 import { type Plan, planToVariantMap } from 'models/lemon';
 
@@ -20,11 +20,22 @@ export function webhookHasMeta(obj: unknown): obj is {
 
 }
 
-export function webhookHasData(obj: unknown): obj is { data: Subscription['data'] } {
+export function webhookHasSubscriptionData(obj: unknown): obj is { data: Subscription['data'] } {
   return (
     isObject(obj) &&
     'data' in obj &&
     isObject(obj.data) &&
+    obj.data.type === 'subscriptions' &&
+    'attributes' in obj.data
+  );
+}
+
+export function webhookHasInvoiceData(obj: unknown): obj is { data: SubscriptionInvoice['data'] } {
+  return (
+    isObject(obj) &&
+    'data' in obj &&
+    isObject(obj.data) &&
+    obj.data.type === 'subscription-invoices' &&
     'attributes' in obj.data
   );
 }

@@ -44,15 +44,39 @@ model Subscription {
   id              BigInt      @id
   workspaceId     BigInt
   customer        Int
+  customerName    String
+  customerEmail   String
   variant         Int
   price           Int
   status          String
   cardBrand       String
   cardDigits      String
   renewsAt        DateTime
-  endsAt         DateTime?
+  endsAt          DateTime?
   expiresAt       DateTime?
   createdAt       DateTime    @default(now())
+}
+
+model Invoice {
+  id                  BigInt      @id
+  subscriptionId      BigInt
+  customer            Int
+  currency            String
+  currencyRate        String
+  total               Int
+  totalFormatted      String
+  discount            Int
+  discountFormatted   String
+  includesTax         Boolean
+  tax                 Int
+  taxFormatted        String
+  reason              String
+  status              String
+  refunded            Boolean
+  refundedAt          DateTime?
+  url                 String
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @default(now())
 }
 
 model Link {

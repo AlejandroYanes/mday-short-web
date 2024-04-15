@@ -2,13 +2,16 @@ import { type AxiomRequest, withAxiom } from 'next-axiom';
 import { z } from 'zod';
 import { sql } from '@vercel/postgres';
 
+import { env } from 'env';
 import { WorkspaceRole } from 'models/user-in-workspace';
 import { resolveCORSHeaders } from 'utils/api';
-import { decryptMessage, openJWT, signJWT } from 'utils/auth';
+import { decryptMessage, openJWT } from 'utils/auth';
 
 const validator = z.object({
   workspace: z.number(),
   email: z.string().email(),
+  plan: z.enum(['basic', 'premium']),
+  cycle: z.enum(['month', 'year']),
   token: z.string(),
 });
 
@@ -24,7 +27,7 @@ export const POST = withAxiom(async (req: AxiomRequest) => {
     return new Response(JSON.stringify({ status: 'invalid data' }), { status: 400, headers });
   }
 
-  const { token, email, workspace } = parsedBody.data;
+  const { token, email, workspace, plan, cycle } = parsedBody.data;
   const session = await openJWT(token);
 
   if (!session) {
@@ -62,11 +65,48 @@ export const POST = withAxiom(async (req: AxiomRequest) => {
   const ownerByEmail = owners.find(owner => owner.email === email);
   const owner = ownerByEmail ?? owners[0]!;
 
-  const validatedToken = await signJWT({ email: owner.email, name: owner.name, workspace });
+  const checkoutURL = resolveCheckoutURL({ plan, cycle, name: owner.name, email: owner.email });
 
-  return new Response(JSON.stringify({ token: validatedToken }), { status: 200, headers });
+  return new Response(JSON.stringify({ url: checkoutURL }), { status: 200, headers });
 });
 
 export function OPTIONS() {
   return new Response(null, { status: 204, headers: resolveCORSHeaders() });
+}
+
+const basicMonthlyCheckout = env.LEMON_SQUEEZY_BASIC_PLAN_MONTHLY_CHECKOUT;
+const basicYearlyCheckout = env.LEMON_SQUEEZY_BASIC_PLAN_YEARLY_CHECKOUT;
+
+const premiumMonthlyCheckout = env.LEMON_SQUEEZY_PREMIUM_PLAN_MONTHLY_CHECKOUT;
+const premiumYearlyCheckout = env.LEMON_SQUEEZY_PREMIUM_PLAN_YEARLY_CHECKOUT;
+
+interface CheckoutParams {
+  plan: 'basic' | 'premium';
+  cycle: 'month' | 'year';
+  name: string;
+  email: string;
+}
+
+function resolveCheckoutURL(params: CheckoutParams) {
+  const { plan, cycle, name, email } = params;
+
+  let url;
+
+  if (plan === 'premium') {
+    url = cycle === 'month' ? new URL(premiumMonthlyCheckout) : new URL(premiumYearlyCheckout);
+
+    if (cycle === 'month') {
+      url.searchParams.append('checkout[discount_code]', env.LEMON_SQUEEZY_MONTHLY_DISCOUNT_CODE);
+    } else {
+      url.searchParams.append('checkout[discount_code]', env.LEMON_SQUEEZY_YEARLY_DISCOUNT_CODE);
+    }
+
+  } else {
+    url = cycle === 'month' ? new URL(basicMonthlyCheckout) : new URL(basicYearlyCheckout);
+  }
+
+  url.searchParams.append('checkout[email]', email);
+  url.searchParams.append('checkout[name]', name);
+
+  return url;
 }
