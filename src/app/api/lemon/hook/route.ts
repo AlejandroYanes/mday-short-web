@@ -44,7 +44,7 @@ export const POST = withAxiom(async (request: AxiomRequest) => {
 
   // Type guard to check if the object has a 'meta' property.
   if (webhookHasMeta(event) && (webhookHasSubscriptionData(event) || webhookHasInvoiceData(event))) {
-    const customerEmail = event.data.attributes.user_email;
+    const customerEmail = (await encryptMessage(event.data.attributes.user_email))!;
 
     const client = await sql.connect();
 
@@ -53,7 +53,7 @@ export const POST = withAxiom(async (request: AxiomRequest) => {
       FROM "Workspace" W
         INNER JOIN "UserInWorkspace" UIW ON W.mid = UIW."workspaceId"
         INNER JOIN "User" U ON U.id = UIW."userId"
-      WHERE U.email = ${await encryptMessage(customerEmail)} AND UIW."role" = ${WorkspaceRole.OWNER}`;
+      WHERE U.email = ${customerEmail} AND UIW."role" = ${WorkspaceRole.OWNER}`;
 
     if (workspaceQuery.rows.length === 0) {
       log.error('Workspace not found', { email: customerEmail });
@@ -102,7 +102,7 @@ export const POST = withAxiom(async (request: AxiomRequest) => {
 
           const price = priceData.data.data.attributes.unit_price;
           const customer = attributes.customer_id;
-          const customerName = attributes.user_name;
+          const customerName = await encryptMessage(attributes.user_name);
           const renewsAt = attributes.renews_at;
           const cardBrand = attributes.card_brand;
           const cardDigits = attributes.card_last_four;
