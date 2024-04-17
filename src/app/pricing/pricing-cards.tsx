@@ -18,7 +18,7 @@ const Header = ({ highlight, children }: { highlight?: boolean; children: any })
 const Price = (props: { value: number; cycle: string; highlight?: boolean }) => (
   <p data-active={props.highlight} className="text-xl data-[active=true]:text-pink-600 dark:data-[active=true]:text-pink-500">
     <span className="text-5xl font-bold mr-1">
-      £{props.value}
+      ${props.value}
     </span>
     <span>/{props.cycle}</span>
   </p>

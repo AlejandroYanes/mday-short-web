@@ -165,6 +165,8 @@ export const POST = withAxiom(async (request: AxiomRequest) => {
       const customer = attributes.customer_id;
       const currency = attributes.currency;
       const currencyRate = attributes.currency_rate;
+      const cardBrand = attributes.card_brand;
+      const cardDigits = attributes.card_last_four;
       const total = attributes.total;
       const totalFormatted = attributes.total_formatted;
       const discount = attributes.discount_total;
@@ -182,14 +184,14 @@ export const POST = withAxiom(async (request: AxiomRequest) => {
       switch (event.meta.event_name) {
         case 'subscription_payment_success': {
           await sql`
-            INSERT INTO "Invoice" (id, "subscriptionId", customer, currency, "currencyRate", total, "totalFormatted", discount, "discountFormatted", "includesTax", tax, "taxFormatted", reason, status, refunded, "refundedAt", url)
-            VALUES (${event.data.id}, ${subscriptionId}, ${customer}, ${currency}, ${currencyRate}, ${total}, ${totalFormatted}, ${discount}, ${discountFormatted}, ${includesTax}, ${tax}, ${taxFormatted}, ${reason}, ${status}, ${refunded}, ${refundedAt}, ${url})`;
+            INSERT INTO "Invoice" (id, "subscriptionId", customer, "cardBrand", "cardDigits", currency, "currencyRate", total, "totalFormatted", discount, "discountFormatted", "includesTax", tax, "taxFormatted", reason, status, refunded, "refundedAt", url)
+            VALUES (${event.data.id}, ${subscriptionId}, ${customer}, ${cardBrand}, ${cardDigits}, ${currency}, ${currencyRate}, ${total}, ${totalFormatted}, ${discount}, ${discountFormatted}, ${includesTax}, ${tax}, ${taxFormatted}, ${reason}, ${status}, ${refunded}, ${refundedAt}, ${url})`;
           log.info('Subscription payment success');
         } break;
         case 'subscription_payment_failed': {
           await sql`
-            INSERT INTO "Invoice" (id, "subscriptionId", customer, currency, "currencyRate", total, "totalFormatted", discount, "discountFormatted", "includesTax", tax, "taxFormatted", reason, status, refunded, "refundedAt", url)
-            VALUES (${event.data.id}, ${subscriptionId}, ${customer}, ${currency}, ${currencyRate}, ${total}, ${totalFormatted}, ${discount}, ${discountFormatted}, ${includesTax}, ${tax}, ${taxFormatted}, ${reason}, ${status}, ${refunded}, ${refundedAt}, ${url})`;
+            INSERT INTO "Invoice" (id, "subscriptionId", customer, "cardBrand", "cardDigits", currency, "currencyRate", total, "totalFormatted", discount, "discountFormatted", "includesTax", tax, "taxFormatted", reason, status, refunded, "refundedAt", url)
+            VALUES (${event.data.id}, ${subscriptionId}, ${customer}, ${customer}, ${cardBrand}, ${currency}, ${currencyRate}, ${total}, ${totalFormatted}, ${discount}, ${discountFormatted}, ${includesTax}, ${tax}, ${taxFormatted}, ${reason}, ${status}, ${refunded}, ${refundedAt}, ${url})`;
           log.info('Subscription payment failed');
         } break;
         case 'subscription_payment_refunded': {

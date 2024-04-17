@@ -61,6 +61,8 @@ model Invoice {
   id                  BigInt      @id
   subscriptionId      BigInt
   customer            Int
+  cardBrand           String
+  cardDigits          String
   currency            String
   currencyRate        String
   total               Int

@@ -161,7 +161,7 @@ export const  POST = withAxiom(async (req: AxiomRequest) => {
     });
 
     return new Response(
-      JSON.stringify({ status: 'found', sessionToken, role: relationQuery.rows[0]!.role }),
+      JSON.stringify({ status: 'found', token: sessionToken, role: relationQuery.rows[0]!.role }),
       { status: 200, headers },
     );
   } catch (error: any) {

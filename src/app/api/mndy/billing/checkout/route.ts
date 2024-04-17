@@ -35,6 +35,7 @@ export const POST = withAxiom(async (req: AxiomRequest) => {
     return new Response(JSON.stringify({ status: 'unauthorized' }), { status: 401, headers });
   }
 
+  console.log('session', session);
   const isViewOnly = session.dat.is_view_only;
 
   if (isViewOnly) {
