@@ -125,7 +125,7 @@ export const POST = withAxiom(async (request: AxiomRequest) => {
 
           await sql`
           UPDATE "Subscription"
-          SET status = ${status}, "renewsAt"=${renewsAt}, "endsAt"=${endsAt}, "cardBrand"=${cardBrand}, "cardDigits"=${cardDigits}
+          SET status = ${status}, "renewsAt" = ${renewsAt}, "endsAt" = ${endsAt}, "cardBrand" = ${cardBrand}, "cardDigits" = ${cardDigits}
           WHERE id = ${subscriptionId}`;
           log.info('Subscription updated', { status, renewsAt, endsAt });
         } break;
@@ -154,6 +154,38 @@ export const POST = withAxiom(async (request: AxiomRequest) => {
         case 'subscription_unpaused': {
           await notifyOfSubscriptionUnpaused({ workspace: workspaceName });
           log.info('Subscription unpaused');
+        } break;
+
+        case 'subscription_plan_changed': {
+          const variantId = attributes.variant_id;
+          const priceId = attributes.first_subscription_item!.price_id;
+          const priceData = await getPrice(priceId);
+
+          if (priceData.error) {
+            log.error('Error fetching price data', {
+              event: event.meta.event_name,
+              subscription: subscriptionId,
+              error: priceData.error,
+            });
+            break;
+          }
+
+          if (!priceData.data) {
+            log.error('Price data not found', {
+              event: event.meta.event_name,
+              subscription: subscriptionId,
+            });
+            break;
+          }
+
+          const price = priceData.data.data.attributes.unit_price;
+          const status = attributes.status;
+
+          await sql`
+            UPDATE "Subscription"
+            SET variant = ${variantId}, price = ${price}, status = ${status}
+            WHERE id = ${subscriptionId}`;
+          log.info('Subscription plan changed');
         } break;
       }
     }
