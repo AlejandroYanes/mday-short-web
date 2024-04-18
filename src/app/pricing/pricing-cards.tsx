@@ -54,8 +54,8 @@ export default function PricingCards() {
           <Price value={billingCycle === 'month' ? 12 : 120} cycle={billingCycle} highlight />
           <ul className="list-disc pl-5">
             <li>Sames as the Base Plan.</li>
-            <li>Use custom domains.</li>
-            <li>Generate QR codes to share.</li>
+            <li>Use custom domains (coming soon).</li>
+            <li>Generate QR codes to share (coming soon).</li>
           </ul>
           <p>
             We are offering discounts for the first 100 users.
