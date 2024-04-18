@@ -6,6 +6,7 @@ import { WorkspaceRole, WorkspaceStatus } from 'models/user-in-workspace';
 import { openJWT, initiateSession, encryptMessage } from 'utils/auth';
 import { resolveCORSHeaders } from 'utils/api';
 import { sendEmailsToOwners } from 'utils/resend';
+import { notifyOfNewSignup } from 'utils/slack';
 
 const validator = z.object({
   workspace: z.number(),
@@ -88,6 +89,8 @@ export const  POST = withAxiom(async (req: AxiomRequest) => {
       client.release();
 
       log.info('User created', { user: newUserId, workspace });
+
+      await notifyOfNewSignup({ name, email });
 
       // the status changes if there is a subscription
       return new Response(

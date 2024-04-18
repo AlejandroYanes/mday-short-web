@@ -7,6 +7,7 @@ import { type UserInWorkspace, WorkspaceRole, WorkspaceStatus } from 'models/use
 import { KEBAB_CASE_REGEX } from 'utils/strings';
 import { openJWT, encryptMessage } from 'utils/auth';
 import { resolveCORSHeaders } from 'utils/api';
+import { notifyOfNewSetup } from '../../../../../utils/slack';
 
 const validator = z.object({
   workspace: z.object({
@@ -97,6 +98,8 @@ export const POST = withAxiom(async(req: AxiomRequest) => {
     wslug: newWorkspaceQuery.rows[0]!.slug,
     user: userId,
   });
+
+  await notifyOfNewSetup({ workspace: workspace.name, wslug: workspace.wslug });
 
   return new Response(
     JSON.stringify({ status: 'created' }),
