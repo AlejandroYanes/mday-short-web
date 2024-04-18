@@ -45,7 +45,7 @@ export const GET = withAxiom(async (req: AxiomRequest) => {
   const subscription = subscriptionResponse.data.data;
 
   return new Response(
-    JSON.stringify({ url: subscription.attributes.urls.customer_portal }),
+    JSON.stringify({ url: subscription.attributes.urls.update_payment_method }),
     { status: 200, headers },
   );
 });
