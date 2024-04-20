@@ -42,6 +42,10 @@ export const env = createEnv({
     LEMON_SQUEEZY_YEARLY_DISCOUNT_CODE: z.string(),
 
     LEMON_SQUEEZY_SUBSCRIPTION_WEBHOOK_SECRET: z.string(),
+    // Vercel
+    VERCEL_TEAM_ID: z.string(),
+    VERCEL_PROJECT_ID: z.string(),
+    AUTH_BEARER_TOKEN: z.string(),
     // Platform
     PLATFORM_URL: z.string().url(),
     PLATFORM_PASSWORD: z.string(),
@@ -97,6 +101,10 @@ export const env = createEnv({
     LEMON_SQUEEZY_YEARLY_DISCOUNT_CODE: process.env.LEMON_SQUEEZY_YEARLY_DISCOUNT_CODE,
 
     LEMON_SQUEEZY_SUBSCRIPTION_WEBHOOK_SECRET: process.env.LEMON_SQUEEZY_SUBSCRIPTION_WEBHOOK_SECRET,
+
+    VERCEL_TEAM_ID: process.env.VERCEL_TEAM_ID,
+    VERCEL_PROJECT_ID: process.env.VERCEL_PROJECT_ID,
+    AUTH_BEARER_TOKEN: process.env.AUTH_BEARER_TOKEN,
 
     PLATFORM_URL: process.env.PLATFORM_URL,
     PLATFORM_PASSWORD: process.env.PLATFORM_PASSWORD,
