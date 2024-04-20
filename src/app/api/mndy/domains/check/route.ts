@@ -1,11 +1,19 @@
 import { type AxiomRequest, withAxiom } from 'next-axiom';
+import { z } from 'zod';
 
 import { env } from 'env';
 import { resolveCORSHeaders } from 'utils/api';
 import { resolveSession } from 'utils/auth';
+import { DOMAIN_NAME_REGEX } from 'utils/strings';
 
-export const GET = withAxiom(async (req: AxiomRequest) => {
-  const log = req.log.with({ scope: 'billing', endpoint: 'mndy/domains/check', ip: req.ip, method: req.method });
+const validator = z.object({
+  domain: z.string()
+    .min(1, { message: 'The domain name can not be empty' })
+    .regex(DOMAIN_NAME_REGEX, { message: 'The domain name is invalid' }),
+});
+
+export const POST = withAxiom(async (req: AxiomRequest) => {
+  const log = req.log.with({ scope: 'domains', endpoint: 'mndy/domains/check', ip: req.ip, method: req.method });
   const headers = resolveCORSHeaders();
 
   const session = resolveSession(req);
@@ -15,13 +23,17 @@ export const GET = withAxiom(async (req: AxiomRequest) => {
     return new Response(JSON.stringify({ status: 'unauthorized' }), { status: 401, headers });
   }
 
-  try {
-    const domain = req.nextUrl.searchParams.get('domain');
+  const body = await req.json();
+  const input = validator.safeParse(body);
 
-    if (!domain) {
-      log.error('Invalid domain');
-      return new Response(JSON.stringify({ status: 'error' }), { status: 400, headers });
-    }
+  if (!input.success) {
+    console.log('input.error', input.error);
+    log.error('Invalid input', { errors: input.error });
+    return new Response(JSON.stringify({ status: 'invalid' }), { status: 400, headers });
+  }
+
+  try {
+    const { domain } = input.data;
 
     const [configResponse, domainResponse] = await Promise.allSettled([
       fetch(
@@ -88,6 +100,7 @@ export const GET = withAxiom(async (req: AxiomRequest) => {
       ...(verificationResponse ? { verificationResponse } : {}),
     }), { status: 200, headers });
   } catch (error) {
+    console.log('error', error);
     log.error('Error fetching domains', { error });
     return new Response(JSON.stringify({ status: 'error' }), { status: 500, headers });
   }

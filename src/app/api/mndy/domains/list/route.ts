@@ -4,9 +4,10 @@ import { env } from 'env';
 import type { Domain } from 'models/domain';
 import { resolveCORSHeaders } from 'utils/api';
 import { resolveSession } from 'utils/auth';
+import { EXCLUDED_DOMAINS } from 'utils/domains';
 
 export const GET = withAxiom(async (req: AxiomRequest) => {
-  const log = req.log.with({ scope: 'billing', endpoint: 'mndy/domains/list', ip: req.ip, method: req.method });
+  const log = req.log.with({ scope: 'domains', endpoint: 'mndy/domains/list', ip: req.ip, method: req.method });
   const headers = resolveCORSHeaders();
 
   const session = resolveSession(req);
@@ -35,11 +36,9 @@ export const GET = withAxiom(async (req: AxiomRequest) => {
 
     const json = await response.json();
     const domains: Domain[] = json.domains;
-
-    const excludeDomains = ['mday-short-web.vercel.app', 'www.mndy.link', 'mndy.link'];
     // not required –> only for this demo to prevent removal of the demo's domain
     const filteredDomains = domains.filter(
-      (domain) => !excludeDomains.includes(domain.name)
+      (domain) => !EXCLUDED_DOMAINS.includes(domain.name)
     )
 
     // filteredDomains.sort((d1, d2) => d1.createdAt - d2.createdAt);
