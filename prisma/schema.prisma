@@ -109,3 +109,11 @@ model Analytic {
   createdAt       DateTime    @default(now())
 }
 
+model Domain {
+  id              BigInt      @id @default(autoincrement())
+  name            String
+  workspaceId     BigInt
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @default(now())
+}
+

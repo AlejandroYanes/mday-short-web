@@ -1,4 +1,12 @@
 export interface Domain {
+  id: number;
+  name: string;
+  workspaceId: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DomainConfig {
   configured: bigint;
   name: string;
   apexName: string;

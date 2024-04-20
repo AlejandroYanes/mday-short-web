@@ -1,4 +1,5 @@
 import { type AxiomRequest, withAxiom } from 'next-axiom';
+import { sql } from '@vercel/postgres';
 import { z } from 'zod';
 
 import { env } from 'env';
@@ -16,7 +17,7 @@ export const POST = withAxiom(async (req: AxiomRequest) => {
   const log = req.log.with({ scope: 'domains', endpoint: 'mndy/domains/add', ip: req.ip, method: req.method });
   const headers = resolveCORSHeaders();
 
-  const session = resolveSession(req);
+  const session = await resolveSession(req);
 
   if (!session) {
     log.error('Invalid token');
@@ -56,6 +57,8 @@ export const POST = withAxiom(async (req: AxiomRequest) => {
       log.error('Failed to add domain', { code: 'domain_taken', error: data.error })
       return new Response(JSON.stringify({ status: 'domain_taken' }), { status: 409, headers });
     }
+
+    await sql`INSERT INTO "Domain" (name, "workspaceId") VALUES (${domain}, ${session.workspace})`;
 
     return new Response(JSON.stringify({ status: 'success' }), { status: 200, headers });
   } catch (error) {

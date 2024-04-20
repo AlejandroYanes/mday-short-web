@@ -16,7 +16,7 @@ export const POST = withAxiom(async (req: AxiomRequest) => {
   const log = req.log.with({ scope: 'domains', endpoint: 'mndy/domains/check', ip: req.ip, method: req.method });
   const headers = resolveCORSHeaders();
 
-  const session = resolveSession(req);
+  const session = await resolveSession(req);
 
   if (!session) {
     log.error('Invalid token');
@@ -86,7 +86,7 @@ export const POST = withAxiom(async (req: AxiomRequest) => {
 
     if (verificationResponse && verificationResponse.verified) {
       /**
-       * Domain was just verified
+       * DomainConfig was just verified
        */
       return new Response(JSON.stringify({
         configured: !configJson.misconfigured,

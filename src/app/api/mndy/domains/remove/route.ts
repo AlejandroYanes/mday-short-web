@@ -1,4 +1,5 @@
 import { type AxiomRequest, withAxiom } from 'next-axiom';
+import { sql } from '@vercel/postgres';
 import { z } from 'zod';
 
 import { env } from 'env';
@@ -17,7 +18,7 @@ export const DELETE = withAxiom(async (req: AxiomRequest) => {
   const log = req.log.with({ scope: 'domains', endpoint: 'mndy/domains/remove', ip: req.ip, method: req.method });
   const headers = resolveCORSHeaders();
 
-  const session = resolveSession(req);
+  const session = await resolveSession(req);
 
   if (!session) {
     log.error('Invalid token');
@@ -35,10 +36,19 @@ export const DELETE = withAxiom(async (req: AxiomRequest) => {
   const { domain } = input.data;
 
   try {
-    // not required –> only for this demo to prevent removal of a few restricted domains
     if (EXCLUDED_DOMAINS.includes(domain)) {
       log.error('Forbidden domain removal', { domain });
       return new Response(JSON.stringify({ status: 'forbidden' }), { status: 403, headers });
+    }
+
+    const domainQuery = await sql<{ id: number; domain: string }>`
+      SELECT id, name
+      FROM "Domain"
+      WHERE name = ${domain} AND "workspaceId" = ${session.workspace}`;
+
+    if (domainQuery.rows.length === 0) {
+      log.error('Domain not found', { domain });
+      return new Response(JSON.stringify({ status: 'not_found' }), { status: 404, headers });
     }
 
     const response = await fetch(
@@ -55,6 +65,8 @@ export const DELETE = withAxiom(async (req: AxiomRequest) => {
       log.error('Error removing domain', { status: response.status });
       return new Response(JSON.stringify({ status: 'error' }), { status: 500, headers });
     }
+
+    await sql`DELETE FROM "Domain" WHERE id = ${domainQuery.rows[0]!.id}`;
 
     return new Response(JSON.stringify({ status: 'success' }), { status: 200, headers });
   } catch (error) {
