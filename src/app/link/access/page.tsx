@@ -17,7 +17,11 @@ interface Props {
 }
 
 const validator = z.object({
-  wslug: z.string().min(1).regex(KEBAB_CASE_REGEX).nullish(),
+  wslug: z.string().min(1).regex(KEBAB_CASE_REGEX),
+  slug: z.string().min(1).regex(KEBAB_CASE_REGEX),
+});
+
+const customDomainValidator = z.object({
   slug: z.string().min(1).regex(KEBAB_CASE_REGEX),
 });
 
@@ -43,7 +47,7 @@ export default function AccessCheckPage(props: Props) {
     redirect('/link/not-found');
   }
 
-  const input = validator.safeParse(searchParams);
+  const input = (customDomain ? customDomainValidator :validator).safeParse(searchParams);
 
   if (!input.success) {
     redirect('/link/not-found');
