@@ -13,12 +13,26 @@ export async function validatePassword(data: FormData) {
   const slug = data.get('slug') as string;
   const password = data.get('password') as string;
 
-  const link = await sql<ShortLink>`SELECT * FROM "Link" WHERE slug = ${slug} AND password = ${password}`;
+  let linkQuery;
 
-  if (link.rowCount === 0) {
+  if (domain) {
+    linkQuery = await sql<ShortLink>`SELECT * FROM "Link" WHERE slug = ${slug} AND domain = ${domain} AND password = ${password}`;
+  } else {
+    linkQuery = await sql<ShortLink>`SELECT * FROM "Link" WHERE slug = ${slug} AND wslug = ${wslug} AND password = ${password}`;
+  }
+
+  if (linkQuery.rowCount === 0) {
+    if (domain) {
+      redirect(`/link/access?slug=${slug}&access=denied`);
+    }
     redirect(`/link/access?wslug=${wslug}&slug=${slug}&access=denied`);
   }
 
   cookies().set(VISITOR_ACCESS_COOKIE({ slug, wslug, domain }), 'granted');
-  redirect(`/${wslug}/${slug}`);
+
+  if (domain) {
+    redirect(`/${slug}`);
+  }
+
+  redirect(`/link/${wslug}/${slug}`);
 }
