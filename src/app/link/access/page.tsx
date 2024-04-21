@@ -42,15 +42,42 @@ export default function AccessCheckPage(props: Props) {
   const customDomain = resolveCustomDomain();
 
   if (customDomain && !slug) {
-    redirect('/link/not-found');
+    // redirect('/link/not-found');
+    return (
+      <div>
+        <dl>
+          <dt>Custom domain</dt>
+          <dd>{customDomain}</dd>
+          <dt>Slug</dt>
+          <dd>{slug}</dd>
+        </dl>
+      </div>
+    );
   } else if (!wslug || !slug) {
-    redirect('/link/not-found');
+    // redirect('/link/not-found');
+    return (
+      <div>
+        <dl>
+          <dt>Custom domain</dt>
+          <dd>{customDomain}</dd>
+          <dt>Slug</dt>
+          <dd>{slug}</dd>
+        </dl>
+      </div>
+    );
   }
 
   const input = (customDomain ? customDomainValidator :validator).safeParse(searchParams);
 
   if (!input.success) {
-    redirect('/link/not-found');
+    // redirect('/link/not-found');
+    return (
+      <div>
+        <pre>
+          {JSON.stringify(input.error, null, 2)}
+        </pre>
+      </div>
+    );
   }
 
   return (
