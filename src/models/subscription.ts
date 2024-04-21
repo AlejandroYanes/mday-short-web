@@ -19,6 +19,8 @@ export interface BillingInfo {
   customerName: string;
   customerEmail: string;
   variant: number;
+  plan: string;
+  cycle: string;
   cardBrand: string;
   cardDigits: string;
   price: number;
