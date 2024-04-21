@@ -44,8 +44,8 @@ export default function PricingCards() {
           <Header>Base Plan</Header>
           <Price value={billingCycle === 'month' ? 8 : 80} cycle={billingCycle} />
           <ul className="list-disc mb-auto pl-5">
-            <li>Create as many links as you want to.</li>
-            <li>Access to Analytics</li>
+            <li>Create as many links as you want to</li>
+            <li>Access to Analytics (coming soon)</li>
           </ul>
         </Container>
         <div className="w-[1px] bg-border my-6" />
@@ -53,9 +53,9 @@ export default function PricingCards() {
           <Header highlight>Premium Plan</Header>
           <Price value={billingCycle === 'month' ? 12 : 120} cycle={billingCycle} highlight />
           <ul className="list-disc pl-5">
-            <li>Sames as the Base Plan.</li>
-            <li>Use custom domains (coming soon).</li>
-            <li>Generate QR codes to share (coming soon).</li>
+            <li>Sames as the Base Plan</li>
+            <li>Use custom domains (coming soon)</li>
+            <li>Generate QR codes to share (coming soon)</li>
           </ul>
           <p>
             We are offering discounts for the first 100 users.
