@@ -41,49 +41,51 @@ export default function AccessCheckPage(props: Props) {
   const { wslug, slug, access } = searchParams;
   const customDomain = resolveCustomDomain();
 
-  if (customDomain && !slug) {
-    // redirect('/link/not-found');
-    return (
-      <div>
-        Custom domain route
-        <dl>
-          <dt>Custom domain</dt>
-          <dd>{customDomain}</dd>
-          <dt>Slug</dt>
-          <dd>{slug}</dd>
-          <dt>Workspace slug</dt>
-          <dd>{wslug}</dd>
-        </dl>
-      </div>
-    );
+  if (customDomain) {
+    if (!slug) {
+      redirect('/link/not-found');
+    }
+    // return (
+    //   <div>
+    //     Custom domain route
+    //     <dl>
+    //       <dt>Custom domain</dt>
+    //       <dd>{customDomain}</dd>
+    //       <dt>Slug</dt>
+    //       <dd>{slug}</dd>
+    //       <dt>Workspace slug</dt>
+    //       <dd>{wslug}</dd>
+    //     </dl>
+    //   </div>
+    // );
   } else if (!wslug || !slug) {
-    // redirect('/link/not-found');
-    return (
-      <div>
-        No custom domain route
-        <dl>
-          <dt>Custom domain</dt>
-          <dd>{customDomain}</dd>
-          <dt>Slug</dt>
-          <dd>{slug}</dd>
-          <dt>Workspace slug</dt>
-          <dd>{wslug}</dd>
-        </dl>
-      </div>
-    );
+    redirect('/link/not-found');
+    // return (
+    //   <div>
+    //     No custom domain route
+    //     <dl>
+    //       <dt>Custom domain</dt>
+    //       <dd>{customDomain}</dd>
+    //       <dt>Slug</dt>
+    //       <dd>{slug}</dd>
+    //       <dt>Workspace slug</dt>
+    //       <dd>{wslug}</dd>
+    //     </dl>
+    //   </div>
+    // );
   }
 
   const input = (customDomain ? customDomainValidator :validator).safeParse(searchParams);
 
   if (!input.success) {
-    // redirect('/link/not-found');
-    return (
-      <div>
-        <pre>
-          {JSON.stringify(input.error, null, 2)}
-        </pre>
-      </div>
-    );
+    redirect('/link/not-found');
+    // return (
+    //   <div>
+    //     <pre>
+    //       {JSON.stringify(input.error, null, 2)}
+    //     </pre>
+    //   </div>
+    // );
   }
 
   return (
