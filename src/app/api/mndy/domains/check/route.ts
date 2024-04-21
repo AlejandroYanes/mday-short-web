@@ -24,6 +24,11 @@ export const POST = withAxiom(async (req: AxiomRequest) => {
     return new Response(JSON.stringify({ status: 'unauthorized' }), { status: 401, headers });
   }
 
+  if (!session.isPremium) {
+    log.error('User is not premium');
+    return new Response(JSON.stringify({ status: 'unauthorized' }), { status: 401, headers });
+  }
+
   const body = await req.json();
   const input = validator.safeParse(body);
 

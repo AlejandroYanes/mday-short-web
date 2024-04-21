@@ -15,6 +15,11 @@ export const GET = withAxiom(async (req: AxiomRequest) => {
     return new Response(JSON.stringify({ status: 'unauthorized' }), { status: 401, headers });
   }
 
+  if (!session.isPremium) {
+    log.error('User is not premium');
+    return new Response(JSON.stringify({ status: 'unauthorized' }), { status: 401, headers });
+  }
+
   try {
     const domainsQuery = await sql<{ id: number; name: string; verified: boolean; configured: boolean }>`
       SELECT id, name, verified, configured

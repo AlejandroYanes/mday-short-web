@@ -163,6 +163,7 @@ export const  POST = withAxiom(async (req: AxiomRequest) => {
       user: userId,
       wslug: workspaceQuery.rows[0]!.slug,
       role: relationQuery.rows[0]!.role as WorkspaceRole,
+      isPremium: isPremiumPlan(subscription.variant),
     });
 
     return new Response(
