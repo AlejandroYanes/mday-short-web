@@ -80,7 +80,8 @@ export async function middleware(req: NextRequest) {
       return NextResponse.rewrite(url);
     }
 
-    query = await sql`SELECT url, password, "expiresAt" from "Link" WHERE slug = ${slug} AND domain = ${domain};`;
+    query = await sql<{ url: string; password: string; expiresAt: string }>`
+      SELECT url, password, "expiresAt" from "Link" WHERE slug = ${slug} AND domain = ${domain};`;
   } else {
     wslug = req.nextUrl.pathname.split('/')[1];
     slug = req.nextUrl.pathname.split('/')[2];
@@ -90,7 +91,8 @@ export async function middleware(req: NextRequest) {
       return NextResponse.rewrite(url);
     }
 
-    query = await sql`SELECT url, password, "expiresAt" from "Link" WHERE slug = ${slug} AND wslug = ${wslug};`;
+    query = await sql<{ url: string; password: string; expiresAt: string }>`
+      SELECT url, password, "expiresAt" from "Link" WHERE slug = ${slug} AND wslug = ${wslug};`;
   }
 
   if (!query.rows[0]) {
@@ -102,6 +104,7 @@ export async function middleware(req: NextRequest) {
 
   if (link.password) {
     const access = cookies().get(VISITOR_ACCESS_COOKIE({ slug, wslug, domain }))?.value;
+    console.log('middleware: access cookie:', VISITOR_ACCESS_COOKIE({ slug, wslug, domain }), access);
 
     if (access !== 'granted') {
       url.pathname = '/link/access';

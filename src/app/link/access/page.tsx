@@ -26,11 +26,11 @@ const customDomainValidator = z.object({
 });
 
 function resolveCustomDomain() {
-  const host = headers().get('host');
+  let host = headers().get('host');
   if (!host) return;
 
   if (host.includes(':')) {
-    return host.split(':')[0];
+    host = host.split(':')[0]!;
   }
 
   return !EXCLUDED_DOMAINS.includes(host) ? host : undefined;
@@ -40,6 +40,8 @@ export default function AccessCheckPage(props: Props) {
   const { searchParams } = props;
   const { wslug, slug, access } = searchParams;
   const customDomain = resolveCustomDomain();
+
+  console.log('link/access page - customDomain', customDomain);
 
   if (customDomain) {
     if (!slug) {

@@ -34,5 +34,5 @@ export async function validatePassword(data: FormData) {
     redirect(`/${slug}`);
   }
 
-  redirect(`/link/${wslug}/${slug}`);
+  redirect(`/${wslug}/${slug}`);
 }
