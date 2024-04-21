@@ -54,7 +54,7 @@ export async function openJWT(input: string): Promise<any> {
   }
 }
 
-interface SessionParams {  user: number; workspace: number; wslug: string; role: string; isPremium: boolean; }
+interface SessionParams {  user: number; workspace: number; wslug: string; role: string; isPremium: boolean }
 
 export async function initiateSession(params: SessionParams) {
   const expires = new Date(Date.now() + (60 * 60 * 24 * 7 * 1000)); // 7 days
