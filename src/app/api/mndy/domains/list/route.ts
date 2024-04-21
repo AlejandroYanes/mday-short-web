@@ -16,8 +16,10 @@ export const GET = withAxiom(async (req: AxiomRequest) => {
   }
 
   try {
-    const domainsQuery = await sql<{ id: number; name: string }>`
-      SELECT id, name FROM "Domain" WHERE "workspaceId" = ${session.workspace} ORDER BY "updatedAt" DESC`;
+    const domainsQuery = await sql<{ id: number; name: string; verified: boolean; configured: boolean }>`
+      SELECT id, name, verified, configured
+      FROM "Domain"
+      WHERE "workspaceId" = ${session.workspace} ORDER BY "updatedAt" DESC`;
 
     return new Response(JSON.stringify(domainsQuery.rows), { status: 200, headers });
   } catch (error) {

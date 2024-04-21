@@ -91,6 +91,15 @@ export const POST = withAxiom(async (req: AxiomRequest) => {
         WHERE id = ${storedDomain.id} AND "workspaceId" = ${session.workspace}`;
     }
 
+    if (!storedDomain.verified && domainJson.verified) {
+      /**
+       * Domain was verified since last check
+       */
+      await client.sql`
+        UPDATE "Domain" SET verified = TRUE
+        WHERE id = ${storedDomain.id} AND "workspaceId" = ${session.workspace}`;
+    }
+
     /**
      * If domain is not verified, we try to verify now
      */
