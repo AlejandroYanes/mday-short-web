@@ -53,9 +53,15 @@ export const POST = withAxiom(async (req: AxiomRequest) => {
       log.error('Failed to add domain', { code: 'forbidden', error: data.error })
       return new Response(JSON.stringify({ status: 'forbidden' }), { status: 403, headers });
     }
+
     if (data.error?.code == 'domain_taken') {
       log.error('Failed to add domain', { code: 'domain_taken', error: data.error })
       return new Response(JSON.stringify({ status: 'domain_taken' }), { status: 409, headers });
+    }
+
+    if (data.error?.code === 'domain_already_in_use') {
+      log.error('Failed to add domain', { code: 'domain_already_in_use', error: data.error })
+      return new Response(JSON.stringify({ status: 'domain_already_in_use' }), { status: 409, headers });
     }
 
     await sql`INSERT INTO "Domain" (name, "workspaceId") VALUES (${domain}, ${session.workspace})`;
