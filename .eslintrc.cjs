@@ -11,6 +11,7 @@ const config = {
     "plugin:import/errors",
     "plugin:import/warnings",
     "plugin:import/typescript",
+    'plugin:@next/next/recommended',
     "plugin:react/recommended",
     "plugin:react/jsx-runtime"
   ],

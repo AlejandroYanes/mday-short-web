@@ -1,10 +1,12 @@
 import Image from 'next/image';
+import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 
+import { KEBAB_CASE_REGEX } from 'utils/strings';
+import { EXCLUDED_DOMAINS } from 'utils/domains';
 import { AppBanner, Input } from 'ui';
 import { validatePassword } from './action';
-import { KEBAB_CASE_REGEX } from 'utils/strings';
 
 interface Props {
   searchParams: {
@@ -15,15 +17,29 @@ interface Props {
 }
 
 const validator = z.object({
-  wslug: z.string().min(1).regex(KEBAB_CASE_REGEX),
+  wslug: z.string().min(1).regex(KEBAB_CASE_REGEX).nullish(),
   slug: z.string().min(1).regex(KEBAB_CASE_REGEX),
 });
+
+function resolveCustomDomain() {
+  const host = headers().get('host');
+  if (!host) return;
+
+  if (host.includes(':')) {
+    return host.split(':')[0];
+  }
+
+  return !EXCLUDED_DOMAINS.includes(host) ? host : undefined;
+}
 
 export default function AccessCheckPage(props: Props) {
   const { searchParams } = props;
   const { wslug, slug, access } = searchParams;
+  const customDomain = resolveCustomDomain();
 
-  if (!wslug || !slug) {
+  if (customDomain && !slug) {
+    redirect('/link/not-found');
+  } else if (!wslug || !slug) {
     redirect('/link/not-found');
   }
 
@@ -55,6 +71,7 @@ export default function AccessCheckPage(props: Props) {
                 Please enter the password to access this link.
               </p>
               <div className="flex flex-col gap-3 w-full mt-4">
+                <input name="domain" type="hidden" value={customDomain}/>
                 <input name="wslug" type="hidden" value={wslug}/>
                 <input name="slug" type="hidden" value={slug}/>
                 <Input name="password" type="password" placeholder="Password" className="w-full" />

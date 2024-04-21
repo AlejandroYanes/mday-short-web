@@ -5,6 +5,7 @@ import { sql } from '@vercel/postgres';
 
 import type { ShortLink } from 'models/links';
 import { VISITOR_ACCESS_COOKIE } from 'utils/cookies';
+import { EXCLUDED_DOMAINS } from './utils/domains';
 
 export const config = {
   matcher: [
@@ -13,7 +14,7 @@ export const config = {
     '/((?!api|_next/static|_next/image|_vercel|logo|illustrations|screenshots|favicon.ico|monday-app-association.json|how-to-use|link|pricing|privacy-policy|signin|terms-of-service|links|users|plans).*)',
     // TODO: this is a list of Monday.com paths that can not be handled by this middleware
     //       this would allow for url masking but the form it's protected with CORS
-    //       might be worth to add a UI options and let users toggle it on/off
+    //       might be worth to add a UI option and let users toggle it on/off
     // '/embed/:mid*',
     // '/forms/:mid*',
     // '/cdn-cgi/:path*',
@@ -71,8 +72,7 @@ export async function middleware(req: NextRequest) {
   let slug;
   let query;
 
-  const defaultDomains = ['mndy.link', 'localhost', 'mday-short.loca.lt'];
-  if (!defaultDomains.includes(domain)) {
+  if (!EXCLUDED_DOMAINS.includes(domain)) {
     slug = req.nextUrl.pathname.split('/')[1];
 
     if (!slug) {
