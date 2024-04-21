@@ -7,11 +7,15 @@ import { sql } from '@vercel/postgres';
 import type { ShortLink } from 'models/links';
 import { VISITOR_ACCESS_COOKIE } from 'utils/cookies';
 
-export async function validatePassword(data: FormData) {
-  const domain = data.has('domain') ? data.get('domain') as string : undefined;
-  const wslug = data.has('wslug') ? data.get('wslug') as string : undefined;
-  const slug = data.get('slug') as string;
-  const password = data.get('password') as string;
+interface AccessPayload {
+  domain?: string;
+  wslug?: string;
+  slug: string;
+  password: string;
+}
+
+export async function validatePassword(data: AccessPayload) {
+  const { domain, wslug, slug, password } = data;
 
   let linkQuery;
 
@@ -22,10 +26,7 @@ export async function validatePassword(data: FormData) {
   }
 
   if (linkQuery.rowCount === 0) {
-    if (domain) {
-      redirect(`/link/access?slug=${slug}&access=denied`);
-    }
-    redirect(`/link/access?wslug=${wslug}&slug=${slug}&access=denied`);
+    return { access: 'denied' };
   }
 
   cookies().set(VISITOR_ACCESS_COOKIE({ slug, wslug, domain }), 'granted');
