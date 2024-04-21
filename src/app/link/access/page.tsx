@@ -45,6 +45,7 @@ export default function AccessCheckPage(props: Props) {
     // redirect('/link/not-found');
     return (
       <div>
+        Custom domain route
         <dl>
           <dt>Custom domain</dt>
           <dd>{customDomain}</dd>
@@ -59,6 +60,7 @@ export default function AccessCheckPage(props: Props) {
     // redirect('/link/not-found');
     return (
       <div>
+        No custom domain route
         <dl>
           <dt>Custom domain</dt>
           <dd>{customDomain}</dd>
