@@ -58,10 +58,10 @@ export default function AccessCheckPage(props: Props) {
     return (
       <div>
         <dl>
-          <dt>Custom domain</dt>
-          <dd>{customDomain}</dd>
           <dt>Slug</dt>
           <dd>{slug}</dd>
+          <dt>Workspace slug</dt>
+          <dd>{wslug}</dd>
         </dl>
       </div>
     );
