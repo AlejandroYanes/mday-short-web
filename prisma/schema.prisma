@@ -88,12 +88,14 @@ model Link {
   wslug           String
   password        String?
   expiresAt       DateTime?
+  domain          String?
   createdAt       DateTime        @default(now())
   postedBy        User?           @relation(fields: [postedById], references: [id])
   postedById      BigInt?
 
   @@unique([wslug, slug])
   @@index([wslug, slug], name: "wslug_slug_index")
+  @@index([postedById])
 }
 
 model Analytic {
@@ -111,7 +113,9 @@ model Analytic {
 
 model Domain {
   id              BigInt      @id @default(autoincrement())
-  name            String
+  name            String      @unique
+  configured      Boolean     @default(false)
+  verified        Boolean     @default(false)
   workspaceId     BigInt
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @default(now())
