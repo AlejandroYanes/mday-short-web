@@ -1,0 +1,20 @@
+DESCRIPTION >
+    Links analytics events landing data source
+
+TOKEN "tracker" APPEND
+
+SCHEMA >
+    `timestamp` DateTime `json:$.timestamp`,
+    `visitor_id` String `json:$.visitor_id`,
+    `wslug` String `json:$.wslug`,
+    `slug` String `json:$.slug`,
+    `domain` String `json:$.domain`,
+    `event` LowCardinality(String) `json:$.event`,
+    `user_agent` LowCardinality(String) `json:$.user_agent`,
+    `location` String `json:$.location`,
+    `device` String `json:$.device`
+
+ENGINE MergeTree
+ENGINE_PARTITION_KEY toYYYYMM(timestamp)
+ENGINE_SORTING_KEY timestamp, event, wslug, slug, domain
+ENGINE_TTL timestamp + toIntervalDay(60)

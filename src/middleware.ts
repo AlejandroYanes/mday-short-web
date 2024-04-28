@@ -2,9 +2,10 @@ import type { NextRequest } from 'next/server';
 import { NextResponse, userAgent } from 'next/server';
 import { cookies, headers } from 'next/headers';
 import { sql } from '@vercel/postgres';
+import { nanoid } from 'nanoid';
 
 import type { ShortLink } from 'models/links';
-import { VISITOR_ACCESS_COOKIE } from 'utils/cookies';
+import { VISITOR_ACCESS_COOKIE, VISITOR_ID_COOKIE } from 'utils/cookies';
 import { EXCLUDED_DOMAINS } from 'utils/domains';
 import { type LinkEventData, sendTinyBirdLinkHitEvent } from 'utils/tiny-bird';
 
@@ -48,9 +49,12 @@ export async function middleware(req: NextRequest) {
 
   const url = req.nextUrl.clone();
 
-  if (req.nextUrl.pathname === '/' || req.nextUrl.pathname === '/service.worker.js') {
+  const pathsToIgnore = ['/', '/service.worker.js', '/service-worker.js'];
+  if (pathsToIgnore.includes(url.pathname)) {
     return NextResponse.next();
   }
+
+  console.log('middleware', url.pathname);
 
   const domain = req.nextUrl.hostname;
   let wslug;
@@ -82,17 +86,31 @@ export async function middleware(req: NextRequest) {
 
   const { device } = userAgent(req);
 
-  const payload: LinkEventData['payload'] = {
+  const visitorCookie = cookies().get(VISITOR_ID_COOKIE);
+  const visitorId = visitorCookie?.value || nanoid();
+
+  const eventData: Omit<LinkEventData, 'event'> = {
+    wslug,
+    slug,
+    domain,
+    visitor_id: visitorId,
     user_agent: headers().get('user-agent') ?? undefined,
-    country: req.geo?.country,
-    region: req.geo?.region,
-    device: device,
+    location: {
+      country: req.geo?.country,
+      city: req.geo?.city,
+      region: req.geo?.region,
+    },
+    device: {
+      type: device.type,
+      vendor: device.vendor,
+      model: device.model,
+    },
   };
 
-  sendTinyBirdLinkHitEvent({ event: 'link_hit', wslug, slug, domain, payload });
+  sendTinyBirdLinkHitEvent({ event: 'link_hit', ...eventData });
 
   if (!query.rows[0]) {
-    sendTinyBirdLinkHitEvent({ event: 'link_not_found', wslug, slug, domain, payload });
+    sendTinyBirdLinkHitEvent({ event: 'link_not_found', ...eventData });
     url.pathname = '/link/not-found';
     return NextResponse.rewrite(url);
   }
@@ -100,11 +118,11 @@ export async function middleware(req: NextRequest) {
   const link = query.rows[0] as ShortLink;
 
   if (link.password) {
-    sendTinyBirdLinkHitEvent({ event: 'link_access_check', wslug, slug, domain, payload });
+    sendTinyBirdLinkHitEvent({ event: 'link_access_check', ...eventData });
     const access = cookies().get(VISITOR_ACCESS_COOKIE({ slug, wslug, domain }))?.value;
 
     if (access !== 'granted') {
-      await sendTinyBirdLinkHitEvent({ event: 'link_access_granted', wslug, slug, domain, payload });
+      await sendTinyBirdLinkHitEvent({ event: 'link_access_granted', ...eventData });
       url.pathname = '/link/access';
 
       if (wslug) url.searchParams.set('wslug', wslug);
@@ -115,14 +133,22 @@ export async function middleware(req: NextRequest) {
   }
 
   if (link.expiresAt && new Date(link.expiresAt) < new Date()) {
-    sendTinyBirdLinkHitEvent({ event: 'link_expired', wslug, slug, domain, payload });
+    sendTinyBirdLinkHitEvent({ event: 'link_expired', ...eventData });
     url.pathname = '/link/expired';
     return NextResponse.rewrite(url);
   }
 
-  sendTinyBirdLinkHitEvent({ event: 'link_view', wslug, slug, domain, payload,  });
+  sendTinyBirdLinkHitEvent({ event: 'link_view', ...eventData,  });
 
-  return NextResponse.redirect(link.url);
+  const res = NextResponse.redirect(link.url);
+
+  if (!visitorCookie) {
+    res.cookies.set(VISITOR_ID_COOKIE, visitorId, {
+      sameSite: 'strict',
+    });
+  }
+
+  return res;
   // return NextResponse.rewrite(link.url);
 
   // if (variant !== 'default') {
@@ -135,9 +161,4 @@ export async function middleware(req: NextRequest) {
   //   });
   // }
   //
-  // if (!visitorCookie) {
-  //   res.cookies.set(VISITOR_ID_COOKIE, visitorId, {
-  //     sameSite: 'strict',
-  //   });
-  // }
 }
