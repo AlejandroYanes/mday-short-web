@@ -24,6 +24,7 @@ export interface LinkEventData {
   wslug?: string;
   domain?: string;
   payload?: {
+    user_agent?: string;
     country?: string;
     city?: string;
     region?: string;

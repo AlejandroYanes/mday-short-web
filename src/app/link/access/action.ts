@@ -1,7 +1,7 @@
 'use server'
 
 import { redirect } from 'next/navigation';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { sql } from '@vercel/postgres';
 
 import type { ShortLink } from 'models/links';
@@ -27,7 +27,13 @@ export async function validatePassword(data: AccessPayload) {
   }
 
   if (linkQuery.rowCount === 0) {
-    sendTinyBirdLinkHitEvent({ event: 'link_access_denied', wslug, slug, domain });
+    sendTinyBirdLinkHitEvent({
+      event: 'link_access_denied',
+      wslug,
+      slug,
+      domain,
+      payload: { user_agent: headers().get('user-agent') ?? undefined },
+    });
     return { access: 'denied' };
   }
 

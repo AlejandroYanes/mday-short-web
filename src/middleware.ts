@@ -1,6 +1,6 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse, userAgent } from 'next/server';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { sql } from '@vercel/postgres';
 
 import type { ShortLink } from 'models/links';
@@ -83,6 +83,7 @@ export async function middleware(req: NextRequest) {
   const { device } = userAgent(req);
 
   const payload: LinkEventData['payload'] = {
+    user_agent: headers().get('user-agent') ?? undefined,
     country: req.geo?.country,
     region: req.geo?.region,
     device: device,
