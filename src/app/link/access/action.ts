@@ -6,6 +6,7 @@ import { sql } from '@vercel/postgres';
 
 import type { ShortLink } from 'models/links';
 import { VISITOR_ACCESS_COOKIE } from 'utils/cookies';
+import { sendTinyBirdLinkHitEvent } from 'utils/tiny-bird';
 
 interface AccessPayload {
   domain?: string;
@@ -26,6 +27,7 @@ export async function validatePassword(data: AccessPayload) {
   }
 
   if (linkQuery.rowCount === 0) {
+    sendTinyBirdLinkHitEvent({ event: 'link_access_denied', wslug, slug, domain });
     return { access: 'denied' };
   }
 

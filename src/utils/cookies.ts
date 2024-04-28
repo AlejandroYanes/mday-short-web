@@ -1,10 +1,11 @@
 import { EXCLUDED_DOMAINS } from './domains';
 
 export const MONDAY_WEB_SESSION_COOKIE = 'mls_web_session';
+export const VISITOR_ID_COOKIE = 'mls_visitor_id';
 
-interface CookieOptions { slug: string; wslug?: string; domain?: string }
+interface AccessCookieOptions { slug: string; wslug?: string; domain?: string }
 
-export const VISITOR_ACCESS_COOKIE = (options: CookieOptions) => {
+export const VISITOR_ACCESS_COOKIE = (options: AccessCookieOptions) => {
   const { slug, wslug, domain } = options;
   const isCustomDomain = domain && !EXCLUDED_DOMAINS.includes(domain);
 

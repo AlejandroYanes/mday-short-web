@@ -42,6 +42,8 @@ export const env = createEnv({
     LEMON_SQUEEZY_YEARLY_DISCOUNT_CODE: z.string(),
 
     LEMON_SQUEEZY_SUBSCRIPTION_WEBHOOK_SECRET: z.string(),
+    // TinyBird
+    TINY_BIRD_TOKEN: z.string(),
     // Vercel
     VERCEL_TEAM_ID: z.string(),
     VERCEL_PROJECT_ID: z.string(),
@@ -101,6 +103,8 @@ export const env = createEnv({
     LEMON_SQUEEZY_YEARLY_DISCOUNT_CODE: process.env.LEMON_SQUEEZY_YEARLY_DISCOUNT_CODE,
 
     LEMON_SQUEEZY_SUBSCRIPTION_WEBHOOK_SECRET: process.env.LEMON_SQUEEZY_SUBSCRIPTION_WEBHOOK_SECRET,
+
+    TINY_BIRD_TOKEN: process.env.TINY_BIRD_TOKEN,
 
     VERCEL_TEAM_ID: process.env.VERCEL_TEAM_ID,
     VERCEL_PROJECT_ID: process.env.VERCEL_PROJECT_ID,

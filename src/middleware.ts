@@ -1,11 +1,12 @@
-import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { NextResponse, userAgent } from 'next/server';
 import { cookies } from 'next/headers';
 import { sql } from '@vercel/postgres';
 
 import type { ShortLink } from 'models/links';
 import { VISITOR_ACCESS_COOKIE } from 'utils/cookies';
-import { EXCLUDED_DOMAINS } from './utils/domains';
+import { EXCLUDED_DOMAINS } from 'utils/domains';
+import { type LinkEventData, sendTinyBirdLinkHitEvent } from 'utils/tiny-bird';
 
 export const config = {
   matcher: [
@@ -22,24 +23,8 @@ export const config = {
 }
 
 export async function middleware(req: NextRequest) {
-  // const visitorCookie = req.cookies.get(VISITOR_ID_COOKIE);
-  // const visitorId = visitorCookie?.value || createId();
-
-  // const { isBot, device } = userAgent(req);
-  // if (!isBot) {
-  //   await recordEvent({
-  //     id: createId(),
-  //     experiment: LANDING_PAGE_EXPERIMENT,
-  //     variant,
-  //     event: 'view',
-  //     visitorId,
-  //     country: req.geo?.country,
-  //     region: req.geo?.region,
-  //     device: device.type,
-  //   });
-  // }
-
-  // TODO: these are the Monday.com paths that can not be handled by this middleware
+  // TODO: these are the Monday.com paths that can not be handled by this middleware.
+  //      Maybe I could add a check for domain
   // if (req.nextUrl.pathname.startsWith('/embed')) {
   //   // re-route the req to https://view.monday.com
   //   const mid = req.nextUrl.pathname.split('/')[2];
@@ -95,7 +80,18 @@ export async function middleware(req: NextRequest) {
       SELECT url, password, "expiresAt" from "Link" WHERE slug = ${slug} AND wslug = ${wslug};`;
   }
 
+  const { device } = userAgent(req);
+
+  const payload: LinkEventData['payload'] = {
+    country: req.geo?.country,
+    region: req.geo?.region,
+    device: device,
+  };
+
+  sendTinyBirdLinkHitEvent({ event: 'link_hit', wslug, slug, domain, payload });
+
   if (!query.rows[0]) {
+    sendTinyBirdLinkHitEvent({ event: 'link_not_found', wslug, slug, domain, payload });
     url.pathname = '/link/not-found';
     return NextResponse.rewrite(url);
   }
@@ -103,10 +99,11 @@ export async function middleware(req: NextRequest) {
   const link = query.rows[0] as ShortLink;
 
   if (link.password) {
+    sendTinyBirdLinkHitEvent({ event: 'link_access_check', wslug, slug, domain, payload });
     const access = cookies().get(VISITOR_ACCESS_COOKIE({ slug, wslug, domain }))?.value;
-    console.log('middleware: access cookie:', VISITOR_ACCESS_COOKIE({ slug, wslug, domain }), access);
 
     if (access !== 'granted') {
+      await sendTinyBirdLinkHitEvent({ event: 'link_access_granted', wslug, slug, domain, payload });
       url.pathname = '/link/access';
 
       if (wslug) url.searchParams.set('wslug', wslug);
@@ -117,9 +114,12 @@ export async function middleware(req: NextRequest) {
   }
 
   if (link.expiresAt && new Date(link.expiresAt) < new Date()) {
+    sendTinyBirdLinkHitEvent({ event: 'link_expired', wslug, slug, domain, payload });
     url.pathname = '/link/expired';
     return NextResponse.rewrite(url);
   }
+
+  sendTinyBirdLinkHitEvent({ event: 'link_view', wslug, slug, domain, payload,  });
 
   return NextResponse.redirect(link.url);
   // return NextResponse.rewrite(link.url);
