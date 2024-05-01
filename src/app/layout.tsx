@@ -24,7 +24,13 @@ interface Props {
 export default function RootLayout({ children }: Props) {
   return (
     <html lang="en" className="scroll-smooth" suppressHydrationWarning>
-      <head>
+      <body className={`font-sans ${inter.variable}`}>
+        <TRPCReactProvider>
+          <ThemeProvider>
+            {children}
+          </ThemeProvider>
+        </TRPCReactProvider>
+        <Analytics />
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=AW-16550360967"
           strategy="lazyOnload"
@@ -38,14 +44,6 @@ export default function RootLayout({ children }: Props) {
               gtag('config', 'AW-16550360967');
           `}
         </Script>
-      </head>
-      <body className={`font-sans ${inter.variable}`}>
-        <TRPCReactProvider>
-          <ThemeProvider>
-            {children}
-          </ThemeProvider>
-        </TRPCReactProvider>
-        <Analytics />
       </body>
     </html>
   );
