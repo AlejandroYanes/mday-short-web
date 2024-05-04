@@ -11,9 +11,8 @@ import { type LinkEventData, sendTinyBirdLinkHitEvent } from 'utils/tiny-bird';
 
 export const config = {
   matcher: [
-    // '/v(.*)',
     // eslint-disable-next-line max-len
-    '/((?!api|_next/static|_next/image|_vercel|logo|illustrations|screenshots|favicon.ico|monday-app-association.json|how-to-use|link|pricing|privacy-policy|signin|terms-of-service|links|users|plans).*)',
+    '/((?!api|_next/static|_next/image|_vercel|logo|illustrations|screenshots|favicon.ico|favicon.png|service.worker.js|service-worker.js|monday-app-association.json|how-to-use|link|pricing|privacy-policy|signin|terms-of-service|links|users|plans).*)',
     // TODO: this is a list of Monday.com paths that can not be handled by this middleware
     //       this would allow for url masking but the form it's protected with CORS
     //       might be worth to add a UI option and let users toggle it on/off
@@ -49,13 +48,6 @@ export async function middleware(req: NextRequest) {
 
   const url = req.nextUrl.clone();
 
-  const pathsToIgnore = ['/', '/service.worker.js', '/service-worker.js'];
-  if (pathsToIgnore.includes(url.pathname)) {
-    return NextResponse.next();
-  }
-
-  console.log('middleware', url.pathname);
-
   const domain = req.nextUrl.hostname;
   let wslug;
   let slug;
@@ -90,8 +82,8 @@ export async function middleware(req: NextRequest) {
   const visitorId = visitorCookie?.value || nanoid();
 
   const eventData: Omit<LinkEventData, 'event'> = {
-    wslug,
     slug,
+    wslug: wslug || '-',
     domain,
     visitor_id: visitorId,
     user_agent: headers().get('user-agent') ?? undefined,
