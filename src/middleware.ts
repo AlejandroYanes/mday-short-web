@@ -48,6 +48,11 @@ export async function middleware(req: NextRequest) {
 
   const url = req.nextUrl.clone();
 
+  const pathsToIgnore = ['/'];
+  if (pathsToIgnore.includes(url.pathname)) {
+    return NextResponse.next();
+  }
+
   const domain = req.nextUrl.hostname;
   let wslug;
   let slug;
