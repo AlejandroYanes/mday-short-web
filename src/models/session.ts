@@ -3,5 +3,6 @@ export interface MondaySession {
   workspace: number;
   wslug: string;
   role: string;
+  isPremium: boolean;
   expires: Date;
 }

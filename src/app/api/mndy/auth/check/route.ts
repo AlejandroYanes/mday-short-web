@@ -7,6 +7,7 @@ import { openJWT, initiateSession, encryptMessage } from 'utils/auth';
 import { resolveCORSHeaders } from 'utils/api';
 import { sendEmailsToOwners } from 'utils/resend';
 import { notifyOfNewSignup } from 'utils/slack';
+import { isPremiumPlan } from '../../../../../utils/lemon';
 
 const validator = z.object({
   workspace: z.number(),
@@ -59,10 +60,11 @@ export const  POST = withAxiom(async (req: AxiomRequest) => {
       return new Response(JSON.stringify({ status: 'not-found' }), { status: 200, headers });
     }
 
-    const subscriptionQuery = await client.sql<{ id: number }>`
-    SELECT id FROM "Subscription" WHERE "workspaceId" = ${workspace} AND status = 'active'`;
+    const subscriptionQuery = await client.sql<{ id: number; variant: number }>`
+      SELECT id, variant FROM "Subscription" WHERE "workspaceId" = ${workspace} AND status = 'active'`;
 
-    const hasSubscription = subscriptionQuery.rows.length > 0;
+    const subscription = subscriptionQuery.rows[0];
+    const hasSubscription = !!subscription;
 
     const userQuery = await client.sql<{ id: number; name: string }>`
     SELECT id, name FROM "User" WHERE email = ${await encryptMessage(email)}`;
@@ -161,10 +163,16 @@ export const  POST = withAxiom(async (req: AxiomRequest) => {
       user: userId,
       wslug: workspaceQuery.rows[0]!.slug,
       role: relationQuery.rows[0]!.role as WorkspaceRole,
+      isPremium: isPremiumPlan(subscription.variant),
     });
 
     return new Response(
-      JSON.stringify({ status: 'found', token: sessionToken, role: relationQuery.rows[0]!.role }),
+      JSON.stringify({
+        status: 'found',
+        token: sessionToken,
+        role: relationQuery.rows[0]!.role,
+        isPremium: isPremiumPlan(subscription.variant),
+      }),
       { status: 200, headers },
     );
   } catch (error: any) {

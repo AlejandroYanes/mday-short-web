@@ -5,14 +5,21 @@ import { z } from 'zod';
 import type { NewShortLink } from 'models/links';
 import { resolveSession } from 'utils/auth';
 import { resolveCORSHeaders } from 'utils/api';
-import { KEBAB_CASE_REGEX } from 'utils/strings';
+import { DOMAIN_NAME_REGEX, KEBAB_CASE_REGEX } from 'utils/strings';
 
 const validator = z.object({
   id: z.number(),
-  url: z.string().min(1, { message: 'The url can not be empty' }).url({ message: 'The url is invalid' }),
-  slug: z.string().min(1, { message: 'The short name can not be empty' }).regex(KEBAB_CASE_REGEX, { message: 'The short name is invalid' }),
+  url: z.string()
+    .min(1, { message: 'The url can not be empty' })
+    .url({ message: 'The url is invalid' }),
+  slug: z.string()
+    .min(1, { message: 'The short name can not be empty' })
+    .regex(KEBAB_CASE_REGEX, { message: 'The short name is invalid' }),
   password: z.string().nullish(),
   expiresAt: z.string().nullish(),
+  domain: z.string()
+    .regex(DOMAIN_NAME_REGEX, { message: 'The domain name is invalid' })
+    .nullish(),
 });
 
 export const PUT = withAxiom(async (req: AxiomRequest) => {
@@ -34,7 +41,7 @@ export const PUT = withAxiom(async (req: AxiomRequest) => {
     return new Response(JSON.stringify(parse.error), { status: 400, headers });
   }
 
-  const { url, slug, password, expiresAt } = parse.data;
+  const { url, slug, password, expiresAt, domain } = parse.data;
 
   const client = await sql.connect();
 
@@ -54,7 +61,7 @@ export const PUT = withAxiom(async (req: AxiomRequest) => {
   }
 
   const query = await client.sql<NewShortLink>`
-    UPDATE "Link" SET url = ${url}, slug = ${slug}, password = ${password}, "expiresAt" = ${expiresAt}
+    UPDATE "Link" SET url = ${url}, slug = ${slug}, password = ${password}, "expiresAt" = ${expiresAt}, domain = ${domain}
     WHERE id = ${parse.data.id} AND wslug = ${session.wslug}
     RETURNING *;
   `;

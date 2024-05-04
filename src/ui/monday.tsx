@@ -5,6 +5,7 @@ export function MondayInstallButton({ className }: { className?: string }) {
       className={className}
       href="https://auth.monday.com/oauth2/authorize?client_id=514781cd0f0fc5309eb59f13577cb981&response_type=install"
     >
+      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         alt="Add to monday.com"
         height="40"

@@ -52,14 +52,20 @@ export function resolvePlanName(variantId: number) {
   return 'N/A';
 }
 
-export function resolvePlanPrice(variantId: number) {
+export function resolvePlanCycle(variantId: number) {
   for (const key of Object.keys(planToVariantMap)) {
     const plan = planToVariantMap[key as Plan];
     const variants = Object.keys(plan.variants);
     if (variants.includes(`${variantId}`)) {
-      return plan.variants[`${variantId}`];
+      return plan.variants[`${variantId}`]!.cycle;
     }
   }
 
   return 'N/A';
+
+}
+
+export function isPremiumPlan(variantId: number) {
+  const premiumVariants = planToVariantMap.premium.variants;
+  return Object.keys(premiumVariants).includes(`${variantId}`);
 }

@@ -2,42 +2,42 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-    provider        = "prisma-client-js"
-    previewFeatures = ["driverAdapters"]
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
-    provider = "postgresql"
-    url = env("POSTGRES_PRISMA_URL") // uses connection pooling
-    directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
-    relationMode = "prisma"
+  provider = "postgresql"
+  url = env("POSTGRES_PRISMA_URL") // uses connection pooling
+  directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
+  relationMode = "prisma"
 }
 
 model User {
-    id          BigInt      @id @default(autoincrement())
-    name        String
-    email       String      @unique
-    createdAt   DateTime    @default(now())
-    links       Link[]
+  id          BigInt      @id @default(autoincrement())
+  name        String
+  email       String      @unique
+  createdAt   DateTime    @default(now())
+  links       Link[]
 
-    @@index([email], name: "email_index")
+  @@index([email], name: "email_index")
 }
 
 model Workspace {
-    id          BigInt      @id @default(autoincrement())
-    mid         BigInt      @unique
-    name        String
-    slug        String      @unique
-    createdAt   DateTime    @default(now())
+  id          BigInt      @id @default(autoincrement())
+  mid         BigInt      @unique
+  name        String
+  slug        String      @unique
+  createdAt   DateTime    @default(now())
 }
 
 model UserInWorkspace {
-    userId          BigInt
-    workspaceId     BigInt
-    role            String
-    status          String
+  userId          BigInt
+  workspaceId     BigInt
+  role            String
+  status          String
 
-    @@id([userId, workspaceId])
+  @@id([userId, workspaceId])
 }
 
 model Subscription {
@@ -88,12 +88,14 @@ model Link {
   wslug           String
   password        String?
   expiresAt       DateTime?
+  domain          String?
   createdAt       DateTime        @default(now())
   postedBy        User?           @relation(fields: [postedById], references: [id])
   postedById      BigInt?
 
   @@unique([wslug, slug])
   @@index([wslug, slug], name: "wslug_slug_index")
+  @@index([postedById])
 }
 
 model Analytic {
@@ -107,5 +109,15 @@ model Analytic {
   region          String?
   device          String?
   createdAt       DateTime    @default(now())
+}
+
+model Domain {
+  id              BigInt        @id @default(autoincrement())
+  name            String        @unique
+  configured       Boolean       @default(false)
+  verified         Boolean       @default(false)
+  workspaceId     BigInt
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @default(now())
 }
 

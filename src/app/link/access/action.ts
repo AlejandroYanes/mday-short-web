@@ -7,17 +7,33 @@ import { sql } from '@vercel/postgres';
 import type { ShortLink } from 'models/links';
 import { VISITOR_ACCESS_COOKIE } from 'utils/cookies';
 
-export async function validatePassword(data: FormData) {
-  const wslug = data.get('wslug') as string;
-  const slug = data.get('slug') as string;
-  const password = data.get('password') as string;
+interface AccessPayload {
+  domain?: string;
+  wslug?: string;
+  slug: string;
+  password: string;
+}
 
-  const link = await sql<ShortLink>`SELECT * FROM "Link" WHERE slug = ${slug} AND password = ${password}`;
+export async function validatePassword(data: AccessPayload) {
+  const { domain, wslug, slug, password } = data;
 
-  if (link.rowCount === 0) {
-    redirect(`/link/access?wslug=${wslug}&slug=${slug}&access=denied`);
+  let linkQuery;
+
+  if (domain) {
+    linkQuery = await sql<ShortLink>`SELECT * FROM "Link" WHERE slug = ${slug} AND domain = ${domain} AND password = ${password}`;
+  } else {
+    linkQuery = await sql<ShortLink>`SELECT * FROM "Link" WHERE slug = ${slug} AND wslug = ${wslug} AND password = ${password}`;
   }
 
-  cookies().set(VISITOR_ACCESS_COOKIE(wslug, slug), 'granted');
+  if (linkQuery.rowCount === 0) {
+    return { access: 'denied' };
+  }
+
+  cookies().set(VISITOR_ACCESS_COOKIE({ slug, wslug, domain }), 'granted');
+
+  if (domain) {
+    redirect(`/${slug}`);
+  }
+
   redirect(`/${wslug}/${slug}`);
 }

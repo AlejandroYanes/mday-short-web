@@ -5,6 +5,7 @@ import { sql } from '@vercel/postgres';
 
 import type { ShortLink } from 'models/links';
 import { VISITOR_ACCESS_COOKIE } from 'utils/cookies';
+import { EXCLUDED_DOMAINS } from './utils/domains';
 
 export const config = {
   matcher: [
@@ -13,7 +14,7 @@ export const config = {
     '/((?!api|_next/static|_next/image|_vercel|logo|illustrations|screenshots|favicon.ico|monday-app-association.json|how-to-use|link|pricing|privacy-policy|signin|terms-of-service|links|users|plans).*)',
     // TODO: this is a list of Monday.com paths that can not be handled by this middleware
     //       this would allow for url masking but the form it's protected with CORS
-    //       might be worth to add a UI options and let users toggle it on/off
+    //       might be worth to add a UI option and let users toggle it on/off
     // '/embed/:mid*',
     // '/forms/:mid*',
     // '/cdn-cgi/:path*',
@@ -66,28 +67,50 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  const wslug = req.nextUrl.pathname.split('/')[1];
-  const slug = req.nextUrl.pathname.split('/')[2];
+  const domain = req.nextUrl.hostname;
+  let wslug;
+  let slug;
+  let query;
 
-  if (!wslug || !slug) {
+  if (!EXCLUDED_DOMAINS.includes(domain)) {
+    slug = req.nextUrl.pathname.split('/')[1];
+
+    if (!slug) {
+      url.pathname = '/link/not-found';
+      return NextResponse.rewrite(url);
+    }
+
+    query = await sql<{ url: string; password: string; expiresAt: string }>`
+      SELECT url, password, "expiresAt" from "Link" WHERE slug = ${slug} AND domain = ${domain};`;
+  } else {
+    wslug = req.nextUrl.pathname.split('/')[1];
+    slug = req.nextUrl.pathname.split('/')[2];
+
+    if (!wslug || !slug) {
+      url.pathname = '/link/not-found';
+      return NextResponse.rewrite(url);
+    }
+
+    query = await sql<{ url: string; password: string; expiresAt: string }>`
+      SELECT url, password, "expiresAt" from "Link" WHERE slug = ${slug} AND wslug = ${wslug};`;
+  }
+
+  if (!query.rows[0]) {
     url.pathname = '/link/not-found';
     return NextResponse.rewrite(url);
   }
 
-  const query = await sql`SELECT url, password, "expiresAt" from "Link" WHERE slug = ${slug} AND wslug = ${wslug};`;
   const link = query.rows[0] as ShortLink;
 
-  if (!query.rowCount) {
-    url.pathname = '/link/not-found';
-    return NextResponse.rewrite(url);
-  }
-
   if (link.password) {
-    const access = cookies().get(VISITOR_ACCESS_COOKIE(wslug, slug))?.value;
+    const access = cookies().get(VISITOR_ACCESS_COOKIE({ slug, wslug, domain }))?.value;
+    console.log('middleware: access cookie:', VISITOR_ACCESS_COOKIE({ slug, wslug, domain }), access);
 
     if (access !== 'granted') {
       url.pathname = '/link/access';
-      url.searchParams.set('wslug', wslug);
+
+      if (wslug) url.searchParams.set('wslug', wslug);
+
       url.searchParams.set('slug', slug);
       return NextResponse.redirect(url);
     }

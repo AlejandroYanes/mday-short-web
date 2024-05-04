@@ -3,6 +3,7 @@ export interface ShortLink {
   url: string;
   slug: string;
   wslug: string;
+  domain: string | null;
   password: string | null;
   createdAt: string;
   expiresAt: string | null;

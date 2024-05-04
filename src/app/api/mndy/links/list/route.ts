@@ -17,7 +17,7 @@ export const GET = withAxiom(async (req: AxiomRequest) => {
   }
 
   const query = await sql<ShortLink>`
-    SELECT id, url, wslug, slug, password, "expiresAt"
+    SELECT id, url, wslug, slug, password, "expiresAt", domain
     FROM "Link"
     WHERE wslug = ${session.wslug}
     ORDER BY "createdAt";`;

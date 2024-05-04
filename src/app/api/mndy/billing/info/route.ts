@@ -4,6 +4,7 @@ import { sql } from '@vercel/postgres';
 import type { BillingInfo } from 'models/subscription';
 import { resolveCORSHeaders } from 'utils/api';
 import { decryptMessage, resolveSession } from 'utils/auth';
+import { resolvePlanCycle, resolvePlanName } from 'utils/lemon';
 
 export const GET = withAxiom(async (req: AxiomRequest) => {
   const headers = resolveCORSHeaders();
@@ -32,8 +33,11 @@ export const GET = withAxiom(async (req: AxiomRequest) => {
   }
 
   log.info('Querying billing info');
+
   billingInfo.customerName = (await decryptMessage(billingInfo.customerName))!;
   billingInfo.customerEmail = (await decryptMessage(billingInfo.customerEmail))!;
+  billingInfo.plan = resolvePlanName(billingInfo.variant);
+  billingInfo.cycle = resolvePlanCycle(billingInfo.variant);
 
   return new Response(JSON.stringify(billingInfo), { status: 200, headers });
 });
