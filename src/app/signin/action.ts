@@ -32,9 +32,8 @@ export async function signin(formData: FormData) {
     workspace: workspaceId,
     wslug,
     role,
+    isPremium: true,
   });
-
-  console.log('sessionToken:', sessionToken);
 
   cookies().set(MONDAY_WEB_SESSION_COOKIE, sessionToken);
   redirect('/links');

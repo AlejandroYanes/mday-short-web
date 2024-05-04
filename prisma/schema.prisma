@@ -2,68 +2,109 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-    provider        = "prisma-client-js"
-    previewFeatures = ["driverAdapters"]
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
-    provider = "postgresql"
-    url = env("POSTGRES_PRISMA_URL") // uses connection pooling
-    directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
-    relationMode = "prisma"
-}
-
-model Link {
-    id              BigInt          @id @default(autoincrement())
-    url             String
-    slug            String
-    wslug           String
-    password        String?
-    expiresAt       DateTime?
-    createdAt       DateTime        @default(now())
-    postedBy        User?           @relation(fields: [postedById], references: [id])
-    postedById      BigInt?
-
-    @@unique([wslug, slug])
-    @@index([wslug, slug], name: "wslug_slug_index")
-}
-
-model Analytic {
-    id              BigInt      @id @default(autoincrement())
-    experiment      String
-    variant         String      @default("default")
-    event           String
-    visitorId       String?
-    country         String?
-    city            String?
-    region          String?
-    device          String?
-    createdAt       DateTime    @default(now())
+  provider = "postgresql"
+  url = env("POSTGRES_PRISMA_URL") // uses connection pooling
+  directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
+  relationMode = "prisma"
 }
 
 model User {
-    id          BigInt      @id @default(autoincrement())
-    name        String
-    email       String      @unique
-    createdAt   DateTime    @default(now())
-    links       Link[]
+  id          BigInt      @id @default(autoincrement())
+  name        String
+  email       String      @unique
+  createdAt   DateTime    @default(now())
+  links       Link[]
 
-    @@index([email], name: "email_index")
+  @@index([email], name: "email_index")
 }
 
 model Workspace {
-    id          BigInt      @id @default(autoincrement())
-    mid         BigInt      @unique
-    name        String
-    slug        String      @unique
-    createdAt   DateTime    @default(now())
+  id          BigInt      @id @default(autoincrement())
+  mid         BigInt      @unique
+  name        String
+  slug        String      @unique
+  createdAt   DateTime    @default(now())
 }
 
 model UserInWorkspace {
-    userId          BigInt
-    workspaceId     BigInt
-    role            String
-    status          String
+  userId          BigInt
+  workspaceId     BigInt
+  role            String
+  status          String
 
-    @@id([userId, workspaceId])
+  @@id([userId, workspaceId])
 }
+
+model Subscription {
+  id              BigInt      @id
+  workspaceId     BigInt
+  customer        Int
+  customerName    String
+  customerEmail   String
+  variant         Int
+  price           Int
+  status          String
+  cardBrand       String
+  cardDigits      String
+  renewsAt        DateTime
+  endsAt          DateTime?
+  expiresAt       DateTime?
+  createdAt       DateTime    @default(now())
+}
+
+model Invoice {
+  id                  BigInt      @id
+  subscriptionId      BigInt
+  customer            Int
+  cardBrand           String
+  cardDigits          String
+  currency            String
+  currencyRate        String
+  total               Int
+  totalFormatted      String
+  discount            Int
+  discountFormatted   String
+  includesTax         Boolean
+  tax                 Int
+  taxFormatted        String
+  reason              String
+  status              String
+  refunded            Boolean
+  refundedAt          DateTime?
+  url                 String
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @default(now())
+}
+
+model Link {
+  id              BigInt          @id @default(autoincrement())
+  url             String
+  slug            String
+  wslug           String
+  password        String?
+  expiresAt       DateTime?
+  domain          String?
+  createdAt       DateTime        @default(now())
+  postedBy        User?           @relation(fields: [postedById], references: [id])
+  postedById      BigInt?
+
+  @@unique([wslug, slug])
+  @@index([wslug, slug], name: "wslug_slug_index")
+  @@index([postedById])
+}
+
+model Domain {
+  id              BigInt        @id @default(autoincrement())
+  name            String        @unique
+  configured       Boolean       @default(false)
+  verified         Boolean       @default(false)
+  workspaceId     BigInt
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @default(now())
+}
+

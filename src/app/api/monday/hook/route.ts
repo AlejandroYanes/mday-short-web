@@ -1,19 +1,21 @@
-import type { NextRequest } from 'next/server';
+import { type AxiomRequest, withAxiom } from 'next-axiom';
 import { sql } from '@vercel/postgres';
 
 import type { MondayEvent } from 'models/monday';
 import { resolveCORSHeaders } from 'utils/api';
-import { notifyOfDeletedAccount, notifyOfNewSignup } from 'utils/slack';
+import { notifyOfUninstall, notifyOfNewInstall } from 'utils/slack';
 
 export function OPTIONS() {
   return new Response(null, { status: 204, headers: resolveCORSHeaders() });
 }
 
-export async function POST(req: NextRequest) {
+export const  POST = withAxiom( async (req: AxiomRequest) => {
+  const log = req.log.with({ scope: 'monday', endpoint: 'monday/hook', ip: req.ip, method: req.method });
+  const headers = resolveCORSHeaders();
   const event: MondayEvent = await req.json();
 
   if (!event) {
-    return new Response(null, { status: 400, headers: resolveCORSHeaders() });
+    return new Response(null, { status: 400, headers });
   }
 
   const { type, data } = event;
@@ -22,8 +24,9 @@ export async function POST(req: NextRequest) {
   try {
     switch (type) {
       case 'install': {
-        await notifyOfNewSignup({ name: data.user_name, email: data.user_email });
-        return new Response(null, { status: 200, headers: resolveCORSHeaders() });
+        log.info('New install', { name: data.user_name, email: data.user_email });
+        await notifyOfNewInstall({ name: data.user_name, email: data.user_email });
+        return new Response(null, { status: 200, headers });
       }
       case 'uninstall': {
         const { user_email } = data;
@@ -33,7 +36,7 @@ export async function POST(req: NextRequest) {
        `;
 
         if (!userQuery.rows.length) {
-          return new Response(null, { status: 404, headers: resolveCORSHeaders() });
+          return new Response(null, { status: 404, headers });
         }
 
         const { id } = userQuery.rows[0]!;
@@ -42,15 +45,16 @@ export async function POST(req: NextRequest) {
         await client.sql`DELETE FROM "UserInWorkspace" WHERE userId = ${id}`;
 
         client.release();
-        await notifyOfDeletedAccount({ name: data.user_name, email: data.user_email });
-        return new Response(null, { status: 200, headers: resolveCORSHeaders() });
+        log.info('App uninstalled', { name: data.user_name, email: data.user_email });
+        await notifyOfUninstall({ name: data.user_name, email: data.user_email });
+        return new Response(null, { status: 200, headers });
       }
       default:
-        return new Response(null, { status: 200, headers: resolveCORSHeaders() });
+        return new Response(null, { status: 200, headers });
     }
   } catch (error) {
     client.release();
-    console.log('❌ Error processing webhook event: ', error);
-    return new Response(null, { status: 500, headers: resolveCORSHeaders() });
+    log.error('Error processing webhook event', { error })
+    return new Response(null, { status: 500, headers });
   }
-}
+})

@@ -34,11 +34,11 @@ export async function decryptMessage(encrypted: string) {
   }
 }
 
-export async function signJWT(payload: any) {
+export async function signJWT(payload: any, expires: string = '7 days from now') {
   return await new SignJWT(payload)
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
-    .setExpirationTime('7 days from now')
+    .setExpirationTime(expires)
     .sign(key);
 }
 
@@ -54,7 +54,9 @@ export async function openJWT(input: string): Promise<any> {
   }
 }
 
-export async function initiateSession(params: {  user: number; workspace: number; wslug: string; role: string }) {
+interface SessionParams {  user: number; workspace: number; wslug: string; role: string; isPremium: boolean }
+
+export async function initiateSession(params: SessionParams) {
   const expires = new Date(Date.now() + (60 * 60 * 24 * 7 * 1000)); // 7 days
   return await signJWT({ ...params, expires: expires.getTime() });
 }

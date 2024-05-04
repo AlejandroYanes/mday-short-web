@@ -5,8 +5,9 @@ import { z } from 'zod';
 import type { Workspace } from 'models/workspace';
 import { type UserInWorkspace, WorkspaceRole, WorkspaceStatus } from 'models/user-in-workspace';
 import { KEBAB_CASE_REGEX } from 'utils/strings';
-import { openJWT, initiateSession, encryptMessage } from 'utils/auth';
+import { openJWT, encryptMessage } from 'utils/auth';
 import { resolveCORSHeaders } from 'utils/api';
+import { notifyOfNewSetup } from '../../../../../utils/slack';
 
 const validator = z.object({
   workspace: z.object({
@@ -98,19 +99,14 @@ export const POST = withAxiom(async(req: AxiomRequest) => {
     user: userId,
   });
 
-  const sessionToken = await initiateSession({
-    workspace: workspace.id,
-    user: userId,
-    wslug: newWorkspaceQuery.rows[0]!.slug,
-    role: WorkspaceRole.OWNER,
-  });
+  await notifyOfNewSetup({ workspace: workspace.name, wslug: workspace.wslug });
 
   return new Response(
-    JSON.stringify({ status: 'created', sessionToken, role: WorkspaceRole.OWNER }),
+    JSON.stringify({ status: 'created' }),
     { status: 200, headers },
   );
 });
 
 export async function OPTIONS() {
-  return new Response(null, { status: 200, headers:resolveCORSHeaders() });
+  return new Response(null, { status: 204, headers:resolveCORSHeaders() });
 }

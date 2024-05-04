@@ -1,10 +1,13 @@
-import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { cookies } from 'next/headers';
+import { NextResponse, userAgent } from 'next/server';
+import { cookies, headers } from 'next/headers';
 import { sql } from '@vercel/postgres';
+import { nanoid } from 'nanoid';
 
 import type { ShortLink } from 'models/links';
-import { VISITOR_ACCESS_COOKIE } from 'utils/cookies';
+import { VISITOR_ACCESS_COOKIE, VISITOR_ID_COOKIE } from 'utils/cookies';
+import { EXCLUDED_DOMAINS } from 'utils/domains';
+import { type LinkEventData, sendTinyBirdLinkHitEvent } from 'utils/tiny-bird';
 
 export const config = {
   matcher: [
@@ -13,7 +16,7 @@ export const config = {
     '/((?!api|_next/static|_next/image|_vercel|logo|illustrations|screenshots|favicon.ico|monday-app-association.json|how-to-use|link|pricing|privacy-policy|signin|terms-of-service|links|users|plans).*)',
     // TODO: this is a list of Monday.com paths that can not be handled by this middleware
     //       this would allow for url masking but the form it's protected with CORS
-    //       might be worth to add a UI options and let users toggle it on/off
+    //       might be worth to add a UI option and let users toggle it on/off
     // '/embed/:mid*',
     // '/forms/:mid*',
     // '/cdn-cgi/:path*',
@@ -21,24 +24,8 @@ export const config = {
 }
 
 export async function middleware(req: NextRequest) {
-  // const visitorCookie = req.cookies.get(VISITOR_ID_COOKIE);
-  // const visitorId = visitorCookie?.value || createId();
-
-  // const { isBot, device } = userAgent(req);
-  // if (!isBot) {
-  //   await recordEvent({
-  //     id: createId(),
-  //     experiment: LANDING_PAGE_EXPERIMENT,
-  //     variant,
-  //     event: 'view',
-  //     visitorId,
-  //     country: req.geo?.country,
-  //     region: req.geo?.region,
-  //     device: device.type,
-  //   });
-  // }
-
-  // TODO: these are the Monday.com paths that can not be handled by this middleware
+  // TODO: these are the Monday.com paths that can not be handled by this middleware.
+  //      Maybe I could add a check for domain
   // if (req.nextUrl.pathname.startsWith('/embed')) {
   //   // re-route the req to https://view.monday.com
   //   const mid = req.nextUrl.pathname.split('/')[2];
@@ -62,43 +49,106 @@ export async function middleware(req: NextRequest) {
 
   const url = req.nextUrl.clone();
 
-  if (req.nextUrl.pathname === '/' || req.nextUrl.pathname === '/service.worker.js') {
+  const pathsToIgnore = ['/', '/service.worker.js', '/service-worker.js'];
+  if (pathsToIgnore.includes(url.pathname)) {
     return NextResponse.next();
   }
 
-  const wslug = req.nextUrl.pathname.split('/')[1];
-  const slug = req.nextUrl.pathname.split('/')[2];
+  console.log('middleware', url.pathname);
 
-  if (!wslug || !slug) {
+  const domain = req.nextUrl.hostname;
+  let wslug;
+  let slug;
+  let query;
+
+  if (!EXCLUDED_DOMAINS.includes(domain)) {
+    slug = req.nextUrl.pathname.split('/')[1];
+
+    if (!slug) {
+      url.pathname = '/link/not-found';
+      return NextResponse.rewrite(url);
+    }
+
+    query = await sql<{ url: string; password: string; expiresAt: string }>`
+      SELECT url, password, "expiresAt" from "Link" WHERE slug = ${slug} AND domain = ${domain};`;
+  } else {
+    wslug = req.nextUrl.pathname.split('/')[1];
+    slug = req.nextUrl.pathname.split('/')[2];
+
+    if (!wslug || !slug) {
+      url.pathname = '/link/not-found';
+      return NextResponse.rewrite(url);
+    }
+
+    query = await sql<{ url: string; password: string; expiresAt: string }>`
+      SELECT url, password, "expiresAt" from "Link" WHERE slug = ${slug} AND wslug = ${wslug};`;
+  }
+
+  const { device } = userAgent(req);
+
+  const visitorCookie = cookies().get(VISITOR_ID_COOKIE);
+  const visitorId = visitorCookie?.value || nanoid();
+
+  const eventData: Omit<LinkEventData, 'event'> = {
+    wslug,
+    slug,
+    domain,
+    visitor_id: visitorId,
+    user_agent: headers().get('user-agent') ?? undefined,
+    location: {
+      country: req.geo?.country,
+      city: req.geo?.city,
+      region: req.geo?.region,
+    },
+    device: {
+      type: device.type,
+      vendor: device.vendor,
+      model: device.model,
+    },
+  };
+
+  sendTinyBirdLinkHitEvent({ event: 'link_hit', ...eventData });
+
+  if (!query.rows[0]) {
+    sendTinyBirdLinkHitEvent({ event: 'link_not_found', ...eventData });
     url.pathname = '/link/not-found';
     return NextResponse.rewrite(url);
   }
 
-  const query = await sql`SELECT url, password, "expiresAt" from "Link" WHERE slug = ${slug} AND wslug = ${wslug};`;
   const link = query.rows[0] as ShortLink;
 
-  if (!query.rowCount) {
-    url.pathname = '/link/not-found';
-    return NextResponse.rewrite(url);
-  }
-
   if (link.password) {
-    const access = cookies().get(VISITOR_ACCESS_COOKIE(wslug, slug))?.value;
+    sendTinyBirdLinkHitEvent({ event: 'link_access_check', ...eventData });
+    const access = cookies().get(VISITOR_ACCESS_COOKIE({ slug, wslug, domain }))?.value;
 
     if (access !== 'granted') {
+      await sendTinyBirdLinkHitEvent({ event: 'link_access_granted', ...eventData });
       url.pathname = '/link/access';
-      url.searchParams.set('wslug', wslug);
+
+      if (wslug) url.searchParams.set('wslug', wslug);
+
       url.searchParams.set('slug', slug);
       return NextResponse.redirect(url);
     }
   }
 
   if (link.expiresAt && new Date(link.expiresAt) < new Date()) {
+    sendTinyBirdLinkHitEvent({ event: 'link_expired', ...eventData });
     url.pathname = '/link/expired';
     return NextResponse.rewrite(url);
   }
 
-  return NextResponse.redirect(link.url);
+  sendTinyBirdLinkHitEvent({ event: 'link_view', ...eventData,  });
+
+  const res = NextResponse.redirect(link.url);
+
+  if (!visitorCookie) {
+    res.cookies.set(VISITOR_ID_COOKIE, visitorId, {
+      sameSite: 'strict',
+    });
+  }
+
+  return res;
   // return NextResponse.rewrite(link.url);
 
   // if (variant !== 'default') {
@@ -111,9 +161,4 @@ export async function middleware(req: NextRequest) {
   //   });
   // }
   //
-  // if (!visitorCookie) {
-  //   res.cookies.set(VISITOR_ID_COOKIE, visitorId, {
-  //     sameSite: 'strict',
-  //   });
-  // }
 }

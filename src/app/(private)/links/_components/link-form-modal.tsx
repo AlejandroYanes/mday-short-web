@@ -56,6 +56,7 @@ export default function LinkFormModal(props: Props) {
       slug: form.get('shortName') as string,
       password: form.get('password') as string,
       expiresAt: date?.toUTCString() ?? null,
+      domain: null,
     };
 
     try {

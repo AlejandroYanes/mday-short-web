@@ -1,5 +1,7 @@
 import type { NextRequest } from 'next/server';
 
+import { signJWT } from 'utils/auth';
+
 const fakeToken = {
   dat: {
     client_id: '1',
@@ -24,6 +26,6 @@ export async function GET(req: NextRequest) {
     return new Response(JSON.stringify({ error: 'forbidden' }), { status: 403 });
   }
 
-  return new Response(JSON.stringify(fakeToken), { status: 200 });
+  return new Response(await signJWT(fakeToken), { status: 200 });
 
 }

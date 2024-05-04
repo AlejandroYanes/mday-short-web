@@ -1,10 +1,11 @@
 import Link from 'next/link';
 
 import { Logo } from './logo';
+import { env } from '../env';
 
 export function AppBanner() {
   return (
-    <Link href="/">
+    <Link href={env.PLATFORM_URL}>
       <div className="flex flex-col items-center">
         <Logo className="h-[160px] w-[160px]"/>
         <h1 className="text-5xl text-center font-extrabold tracking-tight">

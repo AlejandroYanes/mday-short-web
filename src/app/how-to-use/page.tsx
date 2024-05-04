@@ -34,6 +34,7 @@ export default function HowToUsePage() {
                   target="_blank"
                   rel="noreferrer"
                 >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     alt="Add to monday.com"
                     height="40"
