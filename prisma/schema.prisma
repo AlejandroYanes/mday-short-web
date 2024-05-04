@@ -98,19 +98,6 @@ model Link {
   @@index([postedById])
 }
 
-model Analytic {
-  id              BigInt      @id @default(autoincrement())
-  experiment      String
-  variant         String      @default("default")
-  event           String
-  visitorId       String?
-  country         String?
-  city            String?
-  region          String?
-  device          String?
-  createdAt       DateTime    @default(now())
-}
-
 model Domain {
   id              BigInt        @id @default(autoincrement())
   name            String        @unique

@@ -7,7 +7,8 @@ import { openJWT, initiateSession, encryptMessage } from 'utils/auth';
 import { resolveCORSHeaders } from 'utils/api';
 import { sendEmailsToOwners } from 'utils/resend';
 import { notifyOfNewSignup } from 'utils/slack';
-import { isPremiumPlan } from '../../../../../utils/lemon';
+// TODO: uncomment this when billing is enabled
+// import { isPremiumPlan } from 'utils/lemon';
 
 const validator = z.object({
   workspace: z.number(),
@@ -60,11 +61,12 @@ export const  POST = withAxiom(async (req: AxiomRequest) => {
       return new Response(JSON.stringify({ status: 'not-found' }), { status: 200, headers });
     }
 
-    const subscriptionQuery = await client.sql<{ id: number; variant: number }>`
-      SELECT id, variant FROM "Subscription" WHERE "workspaceId" = ${workspace} AND status = 'active'`;
-
-    const subscription = subscriptionQuery.rows[0];
-    const hasSubscription = !!subscription;
+    // TODO: uncomment this when billing is enabled
+    // const subscriptionQuery = await client.sql<{ id: number; variant: number }>`
+    //   SELECT id, variant FROM "Subscription" WHERE "workspaceId" = ${workspace} AND status = 'active'`;
+    //
+    // const subscription = subscriptionQuery.rows[0];
+    // const hasSubscription = !!subscription;
 
     const userQuery = await client.sql<{ id: number; name: string }>`
     SELECT id, name FROM "User" WHERE email = ${await encryptMessage(email)}`;
@@ -94,9 +96,15 @@ export const  POST = withAxiom(async (req: AxiomRequest) => {
 
       await notifyOfNewSignup({ name, email });
 
+      // TODO: uncomment this when billing is enabled
       // the status changes if there is a subscription
+      // return new Response(
+      //   JSON.stringify({ status: hasSubscription ? 'pending' : 'needs-billing' }),
+      //   { status: 200, headers },
+      // );
+
       return new Response(
-        JSON.stringify({ status: hasSubscription ? 'pending' : 'needs-billing' }),
+        JSON.stringify({ status: 'pending' }),
         { status: 200, headers },
       );
     }
@@ -123,21 +131,28 @@ export const  POST = withAxiom(async (req: AxiomRequest) => {
       client.release();
       log.info('User added to workspace', { user, workspace });
 
+      // TODO: uncomment this when billing is enabled
       // the status changes if there is a subscription
+      // return new Response(
+      //   JSON.stringify({ status: hasSubscription ? 'pending' : 'needs-billing' }),
+      //   { status: 200, headers },
+      // );
+
       return new Response(
-        JSON.stringify({ status: hasSubscription ? 'pending' : 'needs-billing' }),
+        JSON.stringify({ status: 'pending' }),
         { status: 200, headers },
       );
     }
 
     client.release();
 
-    if (!hasSubscription) {
-      return new Response(
-        JSON.stringify({ status: 'needs-billing' }),
-        { status: 200, headers },
-      );
-    }
+    // TODO: uncomment this when billing is enabled
+    // if (!hasSubscription) {
+    //   return new Response(
+    //     JSON.stringify({ status: 'needs-billing' }),
+    //     { status: 200, headers },
+    //   );
+    // }
 
     const relation = relationQuery.rows[0]!;
 
@@ -163,7 +178,9 @@ export const  POST = withAxiom(async (req: AxiomRequest) => {
       user: userId,
       wslug: workspaceQuery.rows[0]!.slug,
       role: relationQuery.rows[0]!.role as WorkspaceRole,
-      isPremium: isPremiumPlan(subscription.variant),
+      // TODO: uncomment this when billing is enabled
+      // isPremium: isPremiumPlan(subscription.variant),
+      isPremium: false,
     });
 
     return new Response(
@@ -171,7 +188,9 @@ export const  POST = withAxiom(async (req: AxiomRequest) => {
         status: 'found',
         token: sessionToken,
         role: relationQuery.rows[0]!.role,
-        isPremium: isPremiumPlan(subscription.variant),
+        // TODO: uncomment this when billing is enabled
+        // isPremium: isPremiumPlan(subscription.variant),
+        isPremium: false,
       }),
       { status: 200, headers },
     );
