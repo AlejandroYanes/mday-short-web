@@ -18,7 +18,6 @@ export default function PasswordForm(props: Props) {
   const [error, setError] = useState<boolean>(false);
 
   const handleSubmit = async (event: React.MouseEvent<HTMLButtonElement>) => {
-    console.log('sending form data to the server');
     setIsLoading(true);
     const form = event.currentTarget?.form;
 

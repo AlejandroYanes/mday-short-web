@@ -104,8 +104,8 @@ export const POST = withAxiom(async (request: AxiomRequest) => {
           const customer = attributes.customer_id;
           const customerName = await encryptMessage(attributes.user_name);
           const renewsAt = attributes.renews_at;
-          const cardBrand = attributes.card_brand;
-          const cardDigits = attributes.card_last_four;
+          const cardBrand = attributes.card_brand ?? '----';
+          const cardDigits = attributes.card_last_four ?? '----';
           const status = attributes.status;
 
           await sql`
@@ -120,8 +120,8 @@ export const POST = withAxiom(async (request: AxiomRequest) => {
           const status = attributes.status as string;
           const renewsAt = attributes.renews_at;
           const endsAt = attributes.ends_at;
-          const cardBrand = attributes.card_brand;
-          const cardDigits = attributes.card_last_four;
+          const cardBrand = attributes.card_brand ?? '----';
+          const cardDigits = attributes.card_last_four ?? '----';
 
           await sql`
           UPDATE "Subscription"
@@ -197,8 +197,8 @@ export const POST = withAxiom(async (request: AxiomRequest) => {
       const customer = attributes.customer_id;
       const currency = attributes.currency;
       const currencyRate = attributes.currency_rate;
-      const cardBrand = attributes.card_brand;
-      const cardDigits = attributes.card_last_four;
+      const cardBrand = attributes.card_brand ?? '----';
+      const cardDigits = attributes.card_last_four ?? '----';
       const total = attributes.total;
       const totalFormatted = attributes.total_formatted;
       const discount = attributes.discount_total;

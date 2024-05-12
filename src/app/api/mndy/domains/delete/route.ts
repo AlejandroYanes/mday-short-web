@@ -87,7 +87,6 @@ export const DELETE = withAxiom(async (req: AxiomRequest) => {
 
     return new Response(JSON.stringify({ status: 'success' }), { status: 200, headers });
   } catch (error) {
-    console.log(error);
     log.error('Error removing domain', { error });
     return new Response(JSON.stringify({ status: 'error' }), { status: 500, headers });
 

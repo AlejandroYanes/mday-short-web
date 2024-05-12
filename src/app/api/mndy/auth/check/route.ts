@@ -7,8 +7,7 @@ import { openJWT, initiateSession, encryptMessage } from 'utils/auth';
 import { resolveCORSHeaders } from 'utils/api';
 import { sendEmailsToOwners } from 'utils/resend';
 import { notifyOfNewSignup } from 'utils/slack';
-// TODO: uncomment this when billing is enabled
-// import { isPremiumPlan } from 'utils/lemon';
+import { isPremiumPlan } from 'utils/lemon';
 
 const validator = z.object({
   workspace: z.number(),
@@ -61,12 +60,14 @@ export const  POST = withAxiom(async (req: AxiomRequest) => {
       return new Response(JSON.stringify({ status: 'not-found' }), { status: 200, headers });
     }
 
-    // TODO: uncomment this when billing is enabled
-    // const subscriptionQuery = await client.sql<{ id: number; variant: number }>`
-    //   SELECT id, variant FROM "Subscription" WHERE "workspaceId" = ${workspace} AND status = 'active'`;
-    //
-    // const subscription = subscriptionQuery.rows[0];
-    // const hasSubscription = !!subscription;
+    const subscriptionQuery = await client.sql<{ id: number; variant: number;  status: string }>`
+      SELECT id, variant, status FROM "Subscription" WHERE "workspaceId" = ${workspace} ORDER BY "createdAt" DESC LIMIT 1`;
+
+    const subscription = subscriptionQuery.rows[0];
+    const allowedStatuses = ['active', 'on_trial', 'past_due', 'paused', 'canceled'];
+    const hasSubscription = !!subscription && allowedStatuses.includes(subscription.status);
+    const isPremium = hasSubscription && isPremiumPlan(subscription.variant);
+    const isFreeTrial = hasSubscription && subscription.status === 'on_trial';
 
     const userQuery = await client.sql<{ id: number; name: string }>`
     SELECT id, name FROM "User" WHERE email = ${await encryptMessage(email)}`;
@@ -96,15 +97,9 @@ export const  POST = withAxiom(async (req: AxiomRequest) => {
 
       await notifyOfNewSignup({ name, email });
 
-      // TODO: uncomment this when billing is enabled
       // the status changes if there is a subscription
-      // return new Response(
-      //   JSON.stringify({ status: hasSubscription ? 'pending' : 'needs-billing' }),
-      //   { status: 200, headers },
-      // );
-
       return new Response(
-        JSON.stringify({ status: 'pending' }),
+        JSON.stringify({ status: hasSubscription ? 'pending' : 'needs-billing' }),
         { status: 200, headers },
       );
     }
@@ -131,28 +126,21 @@ export const  POST = withAxiom(async (req: AxiomRequest) => {
       client.release();
       log.info('User added to workspace', { user, workspace });
 
-      // TODO: uncomment this when billing is enabled
       // the status changes if there is a subscription
-      // return new Response(
-      //   JSON.stringify({ status: hasSubscription ? 'pending' : 'needs-billing' }),
-      //   { status: 200, headers },
-      // );
-
       return new Response(
-        JSON.stringify({ status: 'pending' }),
+        JSON.stringify({ status: hasSubscription ? 'pending' : 'needs-billing' }),
         { status: 200, headers },
       );
     }
 
     client.release();
 
-    // TODO: uncomment this when billing is enabled
-    // if (!hasSubscription) {
-    //   return new Response(
-    //     JSON.stringify({ status: 'needs-billing' }),
-    //     { status: 200, headers },
-    //   );
-    // }
+    if (!hasSubscription) {
+      return new Response(
+        JSON.stringify({ status: 'needs-billing' }),
+        { status: 200, headers },
+      );
+    }
 
     const relation = relationQuery.rows[0]!;
 
@@ -178,9 +166,8 @@ export const  POST = withAxiom(async (req: AxiomRequest) => {
       user: userId,
       wslug: workspaceQuery.rows[0]!.slug,
       role: relationQuery.rows[0]!.role as WorkspaceRole,
-      // TODO: uncomment this when billing is enabled
-      // isPremium: isPremiumPlan(subscription.variant),
-      isPremium: false,
+      isPremium,
+      isFreeTrial,
     });
 
     return new Response(
@@ -188,9 +175,8 @@ export const  POST = withAxiom(async (req: AxiomRequest) => {
         status: 'found',
         token: sessionToken,
         role: relationQuery.rows[0]!.role,
-        // TODO: uncomment this when billing is enabled
-        // isPremium: isPremiumPlan(subscription.variant),
-        isPremium: false,
+        isPremium,
+        isFreeTrial,
       }),
       { status: 200, headers },
     );

@@ -33,7 +33,6 @@ export const POST = withAxiom(async (req: AxiomRequest) => {
   const input = validator.safeParse(body);
 
   if (!input.success) {
-    console.log('input.error', input.error);
     log.error('Invalid input', { errors: input.error });
     return new Response(JSON.stringify({ status: 'invalid' }), { status: 400, headers });
   }

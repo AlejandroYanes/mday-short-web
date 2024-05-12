@@ -27,10 +27,12 @@ export async function POST(req: NextRequest) {
     return new Response(JSON.stringify({ status: 'unauthorized' }), { status: 401, headers });
   }
 
-  const subscriptionQuery = await sql<{ id: number }>`
-    SELECT id FROM "Subscription" WHERE "workspaceId" = ${workspace} AND status = 'active'`;
+  const subscriptionQuery = await sql<{ id: string; status: string }>`
+    SELECT id, status FROM "Subscription" WHERE "workspaceId" = ${workspace} ORDER BY "createdAt" DESC LIMIT 1`;
 
-  const hasSubscription = subscriptionQuery.rows.length > 0;
+  const subscription = subscriptionQuery.rows[0];
+  const allowedStatuses = ['active', 'on_trial', 'past_due', 'paused', 'canceled'];
+  const hasSubscription = !!subscription && allowedStatuses.includes(subscription.status);
 
   return new Response(JSON.stringify({ hasSubscription }), { status: 200, headers });
 }
