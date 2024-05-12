@@ -4,6 +4,7 @@ import { z } from 'zod';
 
 import { resolveCORSHeaders } from 'utils/api';
 import { openJWT } from 'utils/auth';
+import { getSubscriptionInformation } from '../../../../../utils/lemon';
 
 const validator = z.object({
   workspace: z.number(),
@@ -27,12 +28,11 @@ export async function POST(req: NextRequest) {
     return new Response(JSON.stringify({ status: 'unauthorized' }), { status: 401, headers });
   }
 
-  const subscriptionQuery = await sql<{ id: string; status: string }>`
+  const subscriptionQuery = await sql<{ id: string; variant: number; status: string }>`
     SELECT id, status FROM "Subscription" WHERE "workspaceId" = ${workspace} ORDER BY "createdAt" DESC LIMIT 1`;
 
   const subscription = subscriptionQuery.rows[0];
-  const allowedStatuses = ['active', 'on_trial', 'past_due', 'paused', 'canceled'];
-  const hasSubscription = !!subscription && allowedStatuses.includes(subscription.status);
+  const { hasSubscription } = getSubscriptionInformation(subscription);
 
   return new Response(JSON.stringify({ hasSubscription }), { status: 200, headers });
 }

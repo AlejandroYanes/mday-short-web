@@ -33,6 +33,7 @@ export async function signin(formData: FormData) {
     wslug,
     role,
     isPremium: true,
+    isFreeTrial: false,
   });
 
   cookies().set(MONDAY_WEB_SESSION_COOKIE, sessionToken);

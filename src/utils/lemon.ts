@@ -69,3 +69,16 @@ export function isPremiumPlan(variantId: number) {
   const premiumVariants = planToVariantMap.premium.variants;
   return Object.keys(premiumVariants).includes(`${variantId}`);
 }
+
+export function getSubscriptionInformation(subscription: { variant: number; status: string } | undefined) {
+  const allowedStatuses = ['active', 'on_trial', 'past_due', 'paused', 'canceled'];
+  const hasSubscription = !!subscription && allowedStatuses.includes(subscription.status);
+  const isPremium = hasSubscription && isPremiumPlan(subscription.variant);
+  const isFreeTrial = hasSubscription && subscription.status === 'on_trial';
+
+  return {
+    hasSubscription,
+    isPremium,
+    isFreeTrial,
+  };
+}

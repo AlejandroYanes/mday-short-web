@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { WorkspaceStatus } from 'models/user-in-workspace';
 import { resolveCORSHeaders } from 'utils/api';
 import { openJWT, initiateSession, encryptMessage } from 'utils/auth';
-import { isPremiumPlan } from 'utils/lemon';
+import { getSubscriptionInformation } from 'utils/lemon';
 
 const validator = z.object({
   workspace: z.number(),
@@ -48,11 +48,11 @@ export const POST = withAxiom(async (req: AxiomRequest) => {
     return new Response(JSON.stringify({ status: 'not-found' }), { status: 404, headers });
   }
 
-  const subscriptionQuery = await client.sql<{ id: number; variant: number }>`
-      SELECT id, variant FROM "Subscription" WHERE "workspaceId" = ${workspace} AND status = 'active'`;
+  const subscriptionQuery = await client.sql<{ id: number; variant: number; status: string }>`
+      SELECT id, variant, status FROM "Subscription" WHERE "workspaceId" = ${workspace} AND status = 'active'`;
 
   const subscription = subscriptionQuery.rows[0];
-  const hasSubscription = !!subscription;
+  const { hasSubscription, isPremium, isFreeTrial } = getSubscriptionInformation(subscription);
 
   if (!hasSubscription) {
     client.release();
@@ -95,7 +95,8 @@ export const POST = withAxiom(async (req: AxiomRequest) => {
     wslug: workspaceQuery.rows[0]!.slug,
     user: userId,
     role: relationQuery.rows[0]!.role,
-    isPremium: isPremiumPlan(subscription.variant),
+    isPremium,
+    isFreeTrial,
   });
 
   return new Response(
@@ -103,7 +104,8 @@ export const POST = withAxiom(async (req: AxiomRequest) => {
       status: 'success',
       sessionToken,
       role: relationQuery.rows[0]!.role,
-      isPremium: isPremiumPlan(subscription.variant),
+      isPremium,
+      isFreeTrial,
     }),
     { status: 200, headers },
   );

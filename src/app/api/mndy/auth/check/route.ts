@@ -7,7 +7,7 @@ import { openJWT, initiateSession, encryptMessage } from 'utils/auth';
 import { resolveCORSHeaders } from 'utils/api';
 import { sendEmailsToOwners } from 'utils/resend';
 import { notifyOfNewSignup } from 'utils/slack';
-import { isPremiumPlan } from 'utils/lemon';
+import { getSubscriptionInformation } from 'utils/lemon';
 
 const validator = z.object({
   workspace: z.number(),
@@ -64,10 +64,7 @@ export const  POST = withAxiom(async (req: AxiomRequest) => {
       SELECT id, variant, status FROM "Subscription" WHERE "workspaceId" = ${workspace} ORDER BY "createdAt" DESC LIMIT 1`;
 
     const subscription = subscriptionQuery.rows[0];
-    const allowedStatuses = ['active', 'on_trial', 'past_due', 'paused', 'canceled'];
-    const hasSubscription = !!subscription && allowedStatuses.includes(subscription.status);
-    const isPremium = hasSubscription && isPremiumPlan(subscription.variant);
-    const isFreeTrial = hasSubscription && subscription.status === 'on_trial';
+    const { hasSubscription, isPremium, isFreeTrial } = getSubscriptionInformation(subscription);
 
     const userQuery = await client.sql<{ id: number; name: string }>`
     SELECT id, name FROM "User" WHERE email = ${await encryptMessage(email)}`;
