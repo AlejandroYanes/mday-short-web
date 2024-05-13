@@ -43,6 +43,7 @@ export default function PricingCards() {
         <Container>
           <Header>Base Plan</Header>
           <Price value={billingCycle === 'month' ? 8 : 80} cycle={billingCycle} />
+          <span>With a 14 days free trial</span>
           <ul className="list-disc mb-auto pl-5">
             <li>Create as many links as you want to</li>
             <li>Access to Analytics (coming soon)</li>
@@ -51,7 +52,8 @@ export default function PricingCards() {
         <div className="w-[1px] bg-border my-6" />
         <Container>
           <Header highlight>Premium Plan</Header>
-          <Price value={billingCycle === 'month' ? 12 : 120} cycle={billingCycle} highlight />
+          <Price value={billingCycle === 'month' ? 12 : 120} cycle={billingCycle} highlight/>
+          <span>With a 14 days free trial</span>
           <ul className="list-disc pl-5">
             <li>Sames as the Base Plan</li>
             <li>Use custom domains</li>
