@@ -1,6 +1,7 @@
 import { Analytics } from '@vercel/analytics/react';
 import { Inter } from 'next/font/google';
-import Script from 'next/script';
+// import Script from 'next/script';
+import { GoogleAnalytics } from '@next/third-parties/google';
 
 import { TRPCReactProvider } from 'trpc/react';
 import { ThemeProvider } from 'ui';
@@ -24,20 +25,20 @@ interface Props {
 export default function RootLayout({ children }: Props) {
   return (
     <html lang="en" className="scroll-smooth" suppressHydrationWarning>
-      <head>
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=AW-16550360967"
-        />
-        <Script id="google-analytics">
-          {`
-              window.dataLayer = window.dataLayer || [];
-              function gtag(){window.dataLayer.push(arguments);}
-              gtag('js', new Date());
+      {/*<head>*/}
+      {/*  <Script*/}
+      {/*    src="https://www.googletagmanager.com/gtag/js?id=AW-16550360967"*/}
+      {/*  />*/}
+      {/*  <Script id="google-analytics">*/}
+      {/*    {`*/}
+      {/*        window.dataLayer = window.dataLayer || [];*/}
+      {/*        function gtag(){window.dataLayer.push(arguments);}*/}
+      {/*        gtag('js', new Date());*/}
 
-              gtag('config', 'AW-16550360967');
-          `}
-        </Script>
-      </head>
+      {/*        gtag('config', 'AW-16550360967');*/}
+      {/*    `}*/}
+      {/*  </Script>*/}
+      {/*</head>*/}
       <body className={`font-sans ${inter.variable}`}>
         <TRPCReactProvider>
           <ThemeProvider>
@@ -45,6 +46,7 @@ export default function RootLayout({ children }: Props) {
           </ThemeProvider>
         </TRPCReactProvider>
         <Analytics />
+        <GoogleAnalytics gaId="AW-16550360967" />
       </body>
     </html>
   );

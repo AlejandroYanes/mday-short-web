@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@lemonsqueezy/lemonsqueezy.js": "2.2.0",
+    "@next/third-parties": "14.2.3",
     "@prisma/client": "5.13.0",
     "@radix-ui/react-accordion": "^1.1.2",
     "@radix-ui/react-alert-dialog": "1.0.4",
