@@ -4,6 +4,7 @@ import { sql } from '@vercel/postgres';
 import type { MondayEvent } from 'models/monday';
 import { resolveCORSHeaders } from 'utils/api';
 import { notifyOfUninstall, notifyOfNewInstall } from 'utils/slack';
+import { sendSignupFollowupEmail } from '../../../../utils/resend';
 
 export function OPTIONS() {
   return new Response(null, { status: 204, headers: resolveCORSHeaders() });
@@ -26,6 +27,7 @@ export const  POST = withAxiom( async (req: AxiomRequest) => {
       case 'install': {
         log.info('New install', { name: data.user_name, email: data.user_email });
         await notifyOfNewInstall({ name: data.user_name, email: data.user_email });
+        await sendSignupFollowupEmail({ to: data.user_email, name: data.user_name });
         return new Response(null, { status: 200, headers });
       }
       case 'uninstall': {

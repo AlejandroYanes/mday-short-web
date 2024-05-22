@@ -40,7 +40,11 @@ interface OwnersEmailsPayload {
   user: string;
 }
 
-export async function sendEmailsToOwners(client: VercelPoolClient, log: Logger, payload: OwnersEmailsPayload) {
+export async function sendEmailsToOwners(
+  client: VercelPoolClient,
+  log: Logger,
+  payload: OwnersEmailsPayload
+) {
   const { workspace, user } = payload;
 
   try {
@@ -66,9 +70,23 @@ export async function sendEmailsToOwners(client: VercelPoolClient, log: Logger, 
       body: (
         <div>
           <p>Hello {name},</p>
-          <br />
-          {/* eslint-disable-next-line react/no-unescaped-entities */}
-          <p>{user} is awaiting your approval to join the "{workspaceName}" workspace for Short Links on monday.</p>
+          <br/>
+          <p>
+            {user} is awaiting your approval to join the
+            {/* eslint-disable-next-line react/no-unescaped-entities */}
+            "{workspaceName}" workspace for Mndy.
+          </p>
+          <br/>
+          <br/>
+          <br/>
+          <br/>
+          <br/>
+          <br/>
+          <p>
+            Best,
+            <br/>
+            The Mndy Team
+          </p>
         </div>
       ),
     }));
@@ -102,8 +120,58 @@ export async function sendInviteEmail(payload: InviteEmailPayload) {
       <div>
         <p>Hello {payload.name},</p>
         <br/>
-        {/* eslint-disable-next-line react/no-unescaped-entities */}
-        <p>You have been invited to join the "{payload.workspaceName}" workspace for Short Links on monday.</p>
+        <p>
+          {/* eslint-disable-next-line react/no-unescaped-entities */}
+          You have been invited to join the "{payload.workspaceName}" workspace for Mndy.
+        </p>
+        <br/>
+        <br/>
+        <br/>
+        <p>
+          Best,
+          <br/>
+          The Mndy Team
+        </p>
+      </div>
+    ),
+  });
+}
+
+interface FollowupEmailPayload {
+  to: string;
+  name: string;
+}
+
+export async function sendSignupFollowupEmail(payload: FollowupEmailPayload) {
+  return sendEmail({
+    to: payload.to,
+    subject: 'Welcome to Mndy!',
+    body: (
+      <div>
+        <p>Hello {payload.name}!</p>
+        <p>Thank you for signing up! {`We're`} excited to have you on board.</p>
+        <p>
+          We’d love to hear about you and your goals for using Mndy.
+          Your feedback is invaluable to us and helps us improve the tool to better meet your needs.
+          <br/>
+          <br/>
+          Could you take a moment to let us know:
+          <ul>
+            <li>What features are you most excited to use?</li>
+            <li>What features you’d like to see in the future?</li>
+            <li>Any questions you might have?</li>
+          </ul>
+          <br/>
+          Feel free to reply to this email with your thoughts or any questions you might have.
+          We’re here to help and ensure you get the most out of our tool.
+        </p>
+        <br/>
+        <br/>
+        <p>
+          Best,
+          <br/>
+          The Mndy Team
+        </p>
       </div>
     ),
   });
