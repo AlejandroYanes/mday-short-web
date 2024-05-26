@@ -4,7 +4,7 @@ import { z } from 'zod';
 
 import { resolveCORSHeaders } from 'utils/api';
 import { openJWT } from 'utils/auth';
-import { getSubscriptionInformation } from '../../../../../utils/lemon';
+import { getSubscriptionInformation } from 'utils/lemon';
 
 const validator = z.object({
   workspace: z.number(),

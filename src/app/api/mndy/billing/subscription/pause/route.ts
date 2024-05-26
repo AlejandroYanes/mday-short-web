@@ -1,19 +1,24 @@
 import { type AxiomRequest, withAxiom } from 'next-axiom';
+import { lemonSqueezySetup } from '@lemonsqueezy/lemonsqueezy.js';
 import { sql } from '@vercel/postgres';
-import { getSubscription, lemonSqueezySetup } from '@lemonsqueezy/lemonsqueezy.js';
 
 import { env } from 'env';
-import { WorkspaceRole } from 'models/user-in-workspace';
 import { resolveCORSHeaders } from 'utils/api';
 import { resolveSession } from 'utils/auth';
+import { WorkspaceRole } from 'models/user-in-workspace';
 
 lemonSqueezySetup({
   apiKey: env.LEMON_SQUEEZY_API_KEY,
 });
 
-export const GET = withAxiom(async (req: AxiomRequest) => {
+export const PATCH = withAxiom(async (req: AxiomRequest) => {
   const headers = resolveCORSHeaders();
-  const log = req.log.with({ scope: 'billing', endpoint: 'mndy/billing/update/payment-method', ip: req.ip, method: req.method });
+  const log = req.log.with({
+    scope: 'billing',
+    endpoint: 'mndy/billing/subscription/pause',
+    ip: req.ip,
+    method: req.method,
+  });
 
   const session = await resolveSession(req);
 
@@ -36,20 +41,31 @@ export const GET = withAxiom(async (req: AxiomRequest) => {
   }
 
   const subscriptionId = subscriptionQuery.rows[0]!.id;
-  const subscriptionResponse = await getSubscription(subscriptionId);
+  const response = await fetch(`https://api.lemonsqueezy.com/v1/subscriptions/${subscriptionId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${env.LEMON_SQUEEZY_API_KEY}`,
+    },
+    body: JSON.stringify({
+      'data': {
+        type: 'subscriptions',
+        id: subscriptionId,
+        attributes: {
+          pause: {
+            mode: 'void',
+          }
+        }
+      }
+    }),
+  });
 
-  if (subscriptionResponse.error || !subscriptionResponse.data) {
-    log.error('Failed to get subscription', { error: subscriptionResponse.error});
+  if (!response.ok) {
+    log.error('Failed to pause subscription', { status: response.status });
     return new Response(JSON.stringify({ status: 'error' }), { status: 400, headers });
   }
 
-  log.info('User opened customer portal');
-  const subscription = subscriptionResponse.data.data;
-
-  return new Response(
-    JSON.stringify({ url: subscription.attributes.urls.update_payment_method }),
-    { status: 200, headers },
-  );
+  return new Response(JSON.stringify({ status: 'success' }), { status: 200, headers });
 });
 
 export function OPTIONS() {

@@ -25,4 +25,5 @@ export interface BillingInfo {
   cardDigits: string;
   price: number;
   status: string;
+  renewsAt: string;
 }

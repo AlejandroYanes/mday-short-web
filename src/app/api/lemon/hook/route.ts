@@ -117,11 +117,16 @@ export const POST = withAxiom(async (request: AxiomRequest) => {
         } break;
 
         case 'subscription_updated': {
-          const status = attributes.status as string;
           const renewsAt = attributes.renews_at;
           const endsAt = attributes.ends_at;
           const cardBrand = attributes.card_brand ?? '----';
           const cardDigits = attributes.card_last_four ?? '----';
+          const pause = attributes.pause;
+          let status = attributes.status as string;
+
+          if (pause) {
+            status = 'paused';
+          }
 
           await sql`
           UPDATE "Subscription"
