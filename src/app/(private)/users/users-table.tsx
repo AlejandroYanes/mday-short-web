@@ -40,9 +40,9 @@ export default function UsersTable() {
       <div className="flex items-center mb-4 gap-4">
         <Select onValueChange={handleFilterChange}>
           <SelectTrigger className="w-[260px]">
-            <SelectValue>Workspace: {filter}</SelectValue>
+            <SelectValue>{`Workspace: ${filter}`}</SelectValue>
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="max-h-[400px]">
             <SelectItem value="all">All</SelectItem>
             <SelectItem value="dland">Devland</SelectItem>
             {workspaces.map((workspace) => (
@@ -53,12 +53,12 @@ export default function UsersTable() {
           </SelectContent>
         </Select>
       </div>
-      <Table>
+      <Table className="table-fixed">
         <TableHeader>
           <TableRow>
             <TableHead>Name</TableHead>
-            <TableHead style={{ width: '170px' }}>Workspace</TableHead>
-            <TableHead className="text-center" style={{ width: '150px' }}>Joined On</TableHead>
+            <TableHead>Workspace</TableHead>
+            <TableHead className="text-center">Joined On</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

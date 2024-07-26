@@ -65,9 +65,9 @@ export default function LinksTable(props: Props) {
         <div className="flex flex-row gap-4">
           <Select onValueChange={handleFilterChange}>
             <SelectTrigger className="w-[260px]">
-              <SelectValue>Workspace: {filter}</SelectValue>
+              <SelectValue>{`Workspace: ${filter}`}</SelectValue>
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="max-h-[400px]">
               <SelectItem value="all">All</SelectItem>
               <SelectItem value="dland">Devland</SelectItem>
               {workspaces.map((workspace) => (
