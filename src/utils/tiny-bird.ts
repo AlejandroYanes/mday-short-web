@@ -20,7 +20,7 @@ export interface LinkEventData {
   slug: string;
   wslug?: string;
   domain?: string;
-  user_agent?: string;
+  user_agent: string | null;
   location?: {
     country?: string;
     city?: string;

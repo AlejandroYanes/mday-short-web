@@ -91,7 +91,7 @@ export async function middleware(req: NextRequest) {
     wslug: wslug || '-',
     domain,
     visitor_id: visitorId,
-    user_agent: headers().get('user-agent') ?? undefined,
+    user_agent: headers().get('user-agent'),
     location: {
       country: req.geo?.country,
       city: req.geo?.city,
@@ -104,13 +104,13 @@ export async function middleware(req: NextRequest) {
     },
   };
 
-  sendTinyBirdLinkHitEvent({ event: 'link_hit', ...eventData });
-
   if (!query.rows[0]) {
     sendTinyBirdLinkHitEvent({ event: 'link_not_found', ...eventData });
     url.pathname = '/link/not-found';
     return NextResponse.rewrite(url);
   }
+
+  sendTinyBirdLinkHitEvent({ event: 'link_hit', ...eventData });
 
   const link = query.rows[0] as ShortLink;
 
