@@ -35,13 +35,13 @@ export async function validatePassword(data: AccessPayload) {
       cookies().set(VISITOR_ID_COOKIE, visitorId, { sameSite: 'strict' });
     }
 
-    sendTinyBirdLinkHitEvent({
+    void sendTinyBirdLinkHitEvent({
       event: 'link_access_denied',
       visitor_id: visitorId,
       wslug,
       slug,
       domain,
-      user_agent: headers().get('user-agent') ?? undefined,
+      user_agent: headers().get('user-agent') ?? 'bot',
     });
     return { access: 'denied' };
   }
