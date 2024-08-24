@@ -53,6 +53,11 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
+  if (req.nextUrl.pathname.endsWith('.php')) {
+    url.pathname = '/link/not-found';
+    return NextResponse.rewrite(url);
+  }
+
   const domain = req.nextUrl.hostname;
   let wslug;
   let slug;
@@ -105,17 +110,17 @@ export async function middleware(req: NextRequest) {
   };
 
   if (!query.rows[0]) {
-    sendTinyBirdLinkHitEvent({ event: 'link_not_found', ...eventData });
+    void sendTinyBirdLinkHitEvent({ event: 'link_not_found', ...eventData });
     url.pathname = '/link/not-found';
     return NextResponse.rewrite(url);
   }
 
-  sendTinyBirdLinkHitEvent({ event: 'link_hit', ...eventData });
+  void sendTinyBirdLinkHitEvent({ event: 'link_hit', ...eventData });
 
   const link = query.rows[0] as ShortLink;
 
   if (link.password) {
-    sendTinyBirdLinkHitEvent({ event: 'link_access_check', ...eventData });
+    void sendTinyBirdLinkHitEvent({ event: 'link_access_check', ...eventData });
     const access = cookies().get(VISITOR_ACCESS_COOKIE({ slug, wslug, domain }))?.value;
 
     if (access !== 'granted') {
@@ -130,12 +135,12 @@ export async function middleware(req: NextRequest) {
   }
 
   if (link.expiresAt && new Date(link.expiresAt) < new Date()) {
-    sendTinyBirdLinkHitEvent({ event: 'link_expired', ...eventData });
+    void sendTinyBirdLinkHitEvent({ event: 'link_expired', ...eventData });
     url.pathname = '/link/expired';
     return NextResponse.rewrite(url);
   }
 
-  sendTinyBirdLinkHitEvent({ event: 'link_view', ...eventData,  });
+  void sendTinyBirdLinkHitEvent({ event: 'link_view', ...eventData,  });
 
   const res = NextResponse.redirect(link.url);
 
