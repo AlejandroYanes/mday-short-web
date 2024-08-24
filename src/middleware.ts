@@ -91,7 +91,7 @@ export async function middleware(req: NextRequest) {
     wslug: wslug || '-',
     domain,
     visitor_id: visitorId,
-    user_agent: headers().get('user-agent'),
+    user_agent: headers().get('user-agent') ?? 'bot',
     location: {
       country: req.geo?.country,
       city: req.geo?.city,
@@ -146,16 +146,4 @@ export async function middleware(req: NextRequest) {
   }
 
   return res;
-  // return NextResponse.rewrite(link.url);
-
-  // if (variant !== 'default') {
-  //   url.pathname = `/x/${variant}`;
-  // }
-
-  // if (!variantCookie) {
-  //   res.cookies.set(LANDING_PAGE_EXPERIMENT_COOKIE, variant, {
-  //     sameSite: 'strict',
-  //   });
-  // }
-  //
 }
