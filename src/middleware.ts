@@ -82,6 +82,11 @@ export async function middleware(req: NextRequest) {
       return NextResponse.rewrite(url);
     }
 
+    if (wslug.startsWith('wp-')) {
+      url.pathname = '/link/not-found';
+      return NextResponse.rewrite(url);
+    }
+
     query = await sql<{ url: string; password: string; expiresAt: string }>`
       SELECT url, password, "expiresAt" from "Link" WHERE slug = ${slug} AND wslug = ${wslug};`;
   }
